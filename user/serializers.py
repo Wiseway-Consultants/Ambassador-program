@@ -9,6 +9,8 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    referral_code = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -18,7 +20,16 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "currency",
-            "is_accepted_terms"
+            "is_accepted_terms",
+            "referral_code",
+        )
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def create(self, validated_data):
+        referral_code = validated_data.pop("referral_code", None)
+        return get_user_model().objects.create_user(
+            referral_code=referral_code,
+            **validated_data
         )
 
 
