@@ -6,9 +6,12 @@ from .models import User
 
 
 class EmailUserAdmin(UserAdmin):
+
+    readonly_fields = ('id', 'referral_code')
+
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'is_accepted_terms', 'is_verified')}),
+        (None, {'fields': ('id', 'referral_code', 'email', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'is_accepted_terms', 'is_verified', 'parent', 'parent_path')}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
@@ -20,7 +23,7 @@ class EmailUserAdmin(UserAdmin):
             'fields': ('email', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'first_name', 'last_name', 'is_staff')
+    list_display = ('id', 'email', 'first_name', 'last_name', 'is_staff')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
