@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.shortcuts import render
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -52,7 +53,7 @@ class RegisterView(APIView):
 
 
 class ConfirmEmailView(APIView):
-    http_method_names = ["get"]
+    permission_classes = []  # allow public access
 
     def get(self, request, *args, **kwargs):
         token = request.query_params.get("token")
@@ -61,11 +62,11 @@ class ConfirmEmailView(APIView):
             user = User.objects.get(email=email)
             user.is_active = True
             user.save()
-            return Response({"detail": "Email confirmed. You can now log in."})
+            return render(request, "email_verified.html")  # ✅ success
         except SignatureExpired:
-            return Response({"detail": "Token expired."}, status=HTTP_400_BAD_REQUEST)
+            return render(request, "email_verified.html", {"error": "Your confirmation link has expired."})
         except (BadSignature, User.DoesNotExist):
-            return Response({"detail": "Invalid token."}, status=HTTP_400_BAD_REQUEST)
+            return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
 
 
 class EmailTokenObtainPairView(TokenObtainPairView):
