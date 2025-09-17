@@ -24,10 +24,23 @@ class RegisterView(APIView):
         if serializer.is_valid():
             # Create user as inactive until email is confirmed
 
-            user = User.objects.create_user(
-                **serializer.validated_data,
-                is_active=False
-            )
+            validated_data = serializer.validated_data
+            password = validated_data.pop("password", None)
+
+            if password:
+                user = User.objects.create_user(
+                    **serializer.validated_data,
+                    password=password,
+                    is_active=False
+                )
+
+            else:
+                user = User.objects.create_user(
+                    **serializer.validated_data,
+                    is_active=False
+                )
+                user.set_unusable_password()
+                user.save()
 
             # Generate confirmation token
             token = signer.sign(user.email)
@@ -52,19 +65,93 @@ class RegisterView(APIView):
         )
 
 
+class ResendConfirmationView(APIView):
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        try:
+            user = User.objects.get(email=email)
+            if user.is_active:
+                return render(request, "resend_success.html", {"error": "Account already activated."})
+
+            # generate new token
+            token = signer.sign(user.email)
+            confirm_url = f"{settings.FRONTEND_URL}/confirm-email/?token={token}"
+
+            send_mail(
+                subject="Confirm your SaveFryOil Ambassador account",
+                message=f"Hi {user.first_name},\n\nPlease confirm your account by clicking the link below:\n\n{confirm_url}\n\nIf you didn’t register, ignore this email.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+
+            return render(request, "resend_success.html")
+        except User.DoesNotExist:
+            return render(request, "resend_success.html", {"error": "Such User doesn't exist"})
+
+
 class ConfirmEmailView(APIView):
     permission_classes = []  # allow public access
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get("token")
+        password = request.data.get("password")
+        if not token or not password:
+            return render(request, "email_verified.html", {"error": "Missing token or password."})
+
+        try:
+            email = signer.unsign(token, max_age=60*60*24)
+            user = User.objects.get(email=email)
+
+            if user.is_active:  # Check if user already active
+                return Response({"detail": "Account already activated."}, status=200)
+
+            user.set_password(password)
+            user.is_active = True
+            user.save()
+
+            is_password_set = user.has_usable_password()
+            return render(request, "email_verified.html", {"password_set": is_password_set})
+        except SignatureExpired:  # render resend button if token expired
+            return render(
+                request,
+                "email_verified.html",
+                {
+                    "error": "Your confirmation link has expired.",
+                    "resend": True,
+                    "email": signer.unsign(token, max_age=None)
+                },
+            )
+        except (BadSignature, User.DoesNotExist):
+            return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
 
     def get(self, request, *args, **kwargs):
         token = request.query_params.get("token")
         try:
-            email = signer.unsign(token, max_age=60*60*24)  # 24h validity
+            email = signer.unsign(token, max_age=60*60*24)
             user = User.objects.get(email=email)
+
+            if user.is_active:  # Check if user already active
+                return Response({"detail": "Account already activated."}, status=200)
+
+            if not user.has_usable_password():
+                #  User don't have password, render create password html
+                return render(request, "email_verified.html", {"token": token})
+
             user.is_active = True
             user.save()
-            return render(request, "email_verified.html")  # ✅ success
-        except SignatureExpired:
-            return render(request, "email_verified.html", {"error": "Your confirmation link has expired."})
+            return render(request, "email_verified.html", {"password_set": True})
+        except SignatureExpired:  # render resend button if token expired
+            return render(
+                request,
+                "email_verified.html",
+                {
+                    "error": "Your confirmation link has expired.",
+                    "resend": True,
+                    "email": signer.unsign(token, max_age=None)
+                },
+            )
         except (BadSignature, User.DoesNotExist):
             return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
 
