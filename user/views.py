@@ -1,9 +1,8 @@
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.shortcuts import render
-from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
@@ -56,12 +55,12 @@ class RegisterView(APIView):
 
             return Response(
                 {"detail": "Account created. Please check your email to confirm registration."},
-                status=HTTP_201_CREATED
+                status=status.HTTP_201_CREATED
             )
 
         return Response(
             {"errors": serializer.errors},
-            status=HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -91,6 +90,61 @@ class ResendConfirmationView(APIView):
             return render(request, "resend_success.html", {"error": "Such User doesn't exist"})
 
 
+class SendResetPasswordView(APIView):
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        try:
+            email = request.data.get("email")
+            user = User.objects.get(email=email)
+
+            token = signer.sign(user.email)  # signed token, expirable
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/?token={token}"
+
+            send_mail(
+                subject="Reset your password",
+                message=f"Hi {user.first_name},\n\nClick the link below to reset your password:\n\n{reset_url}\n\nIf you didn’t request this, ignore this email.",
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+            )
+            return Response(
+                {"detail": "Reset Email sent to user"},
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Such User doesn't exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ResetPasswordView(APIView):
+    permission_classes = []
+
+    def get(self, request, *args, **kwargs):
+        token = request.query_params.get("token")
+        try:
+            email = signer.unsign(token, max_age=60 * 60)  # 1h validity
+            return render(request, "reset_password.html", {"token": token})
+        except SignatureExpired:
+            return render(request, "reset_password.html", {"error": "This reset link has expired."})
+        except BadSignature:
+            return render(request, "reset_password.html", {"error": "Invalid reset link."})
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get("token")
+        password = request.data.get("password")
+
+        try:
+            email = signer.unsign(token, max_age=60 * 60)
+            user = User.objects.get(email=email)
+            user.set_password(password)
+            user.save()
+            return render(request, "reset_password_success.html")
+        except (SignatureExpired, BadSignature, User.DoesNotExist):
+            return render(request, "reset_password.html", {"error": "Invalid or expired reset link."})
+
+
 class ConfirmEmailView(APIView):
     permission_classes = []  # allow public access
 
@@ -101,7 +155,7 @@ class ConfirmEmailView(APIView):
             return render(request, "email_verified.html", {"error": "Missing token or password."})
 
         try:
-            email = signer.unsign(token, max_age=60*60*24)
+            email = signer.unsign(token, max_age=60 * 60 * 24)
             user = User.objects.get(email=email)
 
             if user.is_active:  # Check if user already active
@@ -129,7 +183,7 @@ class ConfirmEmailView(APIView):
     def get(self, request, *args, **kwargs):
         token = request.query_params.get("token")
         try:
-            email = signer.unsign(token, max_age=60*60*24)
+            email = signer.unsign(token, max_age=60 * 60 * 24)
             user = User.objects.get(email=email)
 
             if user.is_active:  # Check if user already active
