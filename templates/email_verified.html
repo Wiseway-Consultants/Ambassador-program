@@ -1,69 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Email Verification</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-    }
-    .card {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      max-width: 400px;
-      width: 100%;
-    }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-    p {
-      color: #374151;
-      font-size: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .success {
-      color: #16a34a;
-    }
-    .error {
-      color: #dc2626;
-    }
-    a {
-      display: inline-block;
-      background: #2563eb;
-      color: white;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    a:hover {
-      background: #1d4ed8;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Email Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #f9fafb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: #374151;
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success {
+            color: #16a34a;
+        }
+
+        .error {
+            color: #dc2626;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .msg {
+            margin-top: 1rem;
+            font-size: 0.95rem;
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
+<div class="card">
     {% if error %}
-      <h1 class="error">❌ Verification Failed</h1>
-      <p>{{ error }}</p>
+        <h1 class="error">❌ Verification Failed</h1>
+        <p>{{ error }}</p>
     {% else %}
-      <h1 class="success">✅ Email Verified</h1>
-      <p>Your account has been successfully activated. You can now log in.</p>
+        {% if password_set %}
+            <h1 class="success">✅ Email Verified</h1>
+            <p>Your account has been successfully activated. You can now log in.</p>
+            <a href="https://savefryoil.com/login">Go to Login</a>
+        {% else %}
+            <h1>🔑 Set Your Password</h1>
+            <form method="POST" action="/users/auth/confirm-email/">
+                {% csrf_token %}
+                <input type="hidden" name="token" value="{{ token }}">
+                <label for="password">Set Password:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">Save Password</button>
+            </form>
+            <div id="message" class="msg"></div>
+        {% endif %}
     {% endif %}
-    <a href="https://savefryoil.com/login">Go to Login</a>
-  </div>
+    {% if resend %}
+        <h1 class="error">❌ Link Expired</h1>
+        <p>Your confirmation link has expired. Click below to resend a new one.</p>
+        <form method="post" action="/users/auth/resend-confirmation/">
+            <input type="hidden" name="email" value="{{ email }}">
+            <button type="submit">Resend Confirmation Email</button>
+        </form>
+    {% endif %}
+</div>
+
+<script>
+    const form = document.getElementById("password-form");
+    if (form) {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const password = document.getElementById("password").value;
+            const confirm = document.getElementById("confirm_password").value;
+            const token = document.getElementById("token").value;
+            const msg = document.getElementById("message");
+
+            if (password !== confirm) {
+                msg.textContent = "❌ Passwords do not match";
+                msg.style.color = "red";
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:8001/users/auth/confirm-email/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({token, password}),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    msg.textContent = "✅ Password successfully set. Redirecting...";
+                    msg.style.color = "green";
+                    setTimeout(() => {
+                        window.location.href = "https://savefryoil.com/login";
+                    }, 2000);
+                } else {
+                    msg.textContent = "❌ " + (data.detail || "Something went wrong");
+                    msg.style.color = "red";
+                }
+            } catch (err) {
+                msg.textContent = "❌ Network error. Please try again.";
+                msg.style.color = "red";
+            }
+        });
+    }
+</script>
 </body>
 </html>
