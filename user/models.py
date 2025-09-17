@@ -13,7 +13,7 @@ class CustomUserManager(BaseUserManager):
     for authentication instead of usernames.
     """
 
-    def create_user(self, email, password, referral_code=None, **extra_fields):
+    def create_user(self, email, password=None, referral_code=None, **extra_fields):
         """
         Create and save a User with the given email and password.
         """
@@ -31,7 +31,10 @@ class CustomUserManager(BaseUserManager):
                 raise ValueError(_('Parent user does not exist'))
 
         user = self.model(email=email, parent=parent, **extra_fields)
-        user.set_password(password)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
         user.save()
         return user
 

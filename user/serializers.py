@@ -23,7 +23,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_accepted_terms",
             "referral_code",
         )
-        extra_kwargs = {"password": {"write_only": True}}
+        extra_kwargs = {"password": {"write_only": True, "required": False}}
 
     def create(self, validated_data):
         referral_code = validated_data.pop("referral_code", None)
