@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model, update_session_auth_hash
+from django.db import transaction
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -6,11 +7,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-from django.core.mail import send_mail
 from django.conf import settings
 
 from .qr_code_tiger_api import qrTigerAPI
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
+from .utils.send_email import send_email
 
 User = get_user_model()
 signer = TimestampSigner()
@@ -21,47 +22,38 @@ class RegisterView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            # Create user as inactive until email is confirmed
+        if not serializer.is_valid():
+            return Response(
+                {"errors": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        with transaction.atomic():
             validated_data = serializer.validated_data
             password = validated_data.pop("password", None)
 
             if password:
                 user = User.objects.create_user(
-                    **serializer.validated_data,
+                    **validated_data,
                     password=password,
                     is_active=False
                 )
-
             else:
                 user = User.objects.create_user(
-                    **serializer.validated_data,
+                    **validated_data,
                     is_active=False
                 )
                 user.set_unusable_password()
                 user.save()
 
-            # Generate confirmation token
             token = signer.sign(user.email)
             confirm_url = f"{settings.FRONTEND_URL}/confirm-email/?token={token}"
 
-            # Send confirmation email
-            send_mail(
-                subject="Confirm your SaveFryOil Ambassador account",
-                message=f"Hi {user.first_name},\n\nPlease confirm your account by clicking the link below:\n\n{confirm_url}\n\nIf you didn’t register, just ignore this email.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
-
-            return Response(
-                {"detail": "Account created. Please check your email to confirm registration."},
-                status=status.HTTP_201_CREATED
-            )
+            send_email(user, confirm_url, "confirm")
 
         return Response(
-            {"errors": serializer.errors},
-            status=status.HTTP_400_BAD_REQUEST
+            {"detail": "Account created. Please check your email to confirm registration."},
+            status=status.HTTP_201_CREATED
         )
 
 
@@ -75,16 +67,10 @@ class ResendConfirmationView(APIView):
             if user.is_active:
                 return render(request, "resend_success.html", {"error": "Account already activated."})
 
-            # generate new token
             token = signer.sign(user.email)
             confirm_url = f"{settings.FRONTEND_URL}/confirm-email/?token={token}"
 
-            send_mail(
-                subject="Confirm your SaveFryOil Ambassador account",
-                message=f"Hi {user.first_name},\n\nPlease confirm your account by clicking the link below:\n\n{confirm_url}\n\nIf you didn’t register, ignore this email.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
+            send_email(user, confirm_url, "confirm")
 
             return render(request, "resend_success.html")
         except User.DoesNotExist:
@@ -102,12 +88,8 @@ class SendResetPasswordView(APIView):
             token = signer.sign(user.email)  # signed token, expirable
             reset_url = f"{settings.FRONTEND_URL}/reset-password/?token={token}"
 
-            send_mail(
-                subject="Reset your password",
-                message=f"Hi {user.first_name},\n\nClick the link below to reset your password:\n\n{reset_url}\n\nIf you didn’t request this, ignore this email.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-            )
+            send_email(user, reset_url, "reset")
+
             return Response(
                 {"detail": "Reset Email sent to user"},
                 status=status.HTTP_200_OK
