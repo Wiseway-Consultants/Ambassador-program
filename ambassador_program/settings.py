@@ -28,6 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "ambassador.savefryoil.com",
+    "www.ambassador.savefryoil.com",
     "15.156.115.46"
 ]
 
