@@ -79,11 +79,11 @@ WSGI_APPLICATION = 'ambassador_program.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": getenv("DB_NAME"),
-        "USER": getenv("DB_USER"),
-        "PASSWORD": getenv("DB_PASSWORD"),
-        "HOST": getenv("DB_HOST", "127.0.0.1"),
-        "PORT": getenv("DB_PORT", "5432"),
+        "NAME": getenv("POSTGRES_DB"),
+        "USER": getenv("POSTGRES_USER"),
+        "PASSWORD": getenv("POSTGRES_PASSWORD"),
+        "HOST": getenv("POSTGRES_HOST", "127.0.0.1"),
+        "PORT": getenv("POSTGRES_PORT", "5432"),
     }
 }
 

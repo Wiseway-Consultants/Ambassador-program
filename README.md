@@ -4,3 +4,10 @@ docker run --name sfo-postgres \
   -e POSTGRES_PASSWORD=sfo_pass \
   -p 5432:5432 \
   -d postgres:17
+
+For development:
+docker-compose up dev --build
+
+
+For production:
+docker-compose up prod --build
