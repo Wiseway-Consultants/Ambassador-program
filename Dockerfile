@@ -23,3 +23,5 @@ COPY . .
 
 # Expose port
 EXPOSE 8001
+
+RUN python manage.py collectstatic --noinput
