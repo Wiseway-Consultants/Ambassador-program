@@ -26,7 +26,10 @@ SECRET_KEY = getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["ambassador.savefryoil.com"]
+ALLOWED_HOSTS = [
+    "ambassador.savefryoil.com",
+    "15.156.115.46"
+]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://ambassador.savefryoil.com",
@@ -132,7 +135,7 @@ AUTHENTICATION_BACKENDS = ['user.auth_backends.EmailBackend']
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "/static/"
-STATIC_ROOT = path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Default primary key field type
