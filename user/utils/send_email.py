@@ -5,7 +5,6 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 
-
 def send_email(user, url, email_type: str = "confirm"):
 
     from_email = settings.DEFAULT_FROM_EMAIL
