@@ -31,6 +31,8 @@ ALLOWED_HOSTS = [
     "15.156.115.46"
 ]
 
+USE_X_FORWARDED_HOST = True
+
 CSRF_TRUSTED_ORIGINS = [
     "https://ambassador.savefryoil.com",
 ]
