@@ -26,16 +26,13 @@ SECRET_KEY = getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["ambassador.savefryoil.com"]
 
 CSRF_TRUSTED_ORIGINS = [
     "https://ambassador.savefryoil.com",
-    "http://localhost:8001",
-    "http://127.0.0.1:8001",
-    "http://0.0.0.0:8001",
 ]
 
-
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
