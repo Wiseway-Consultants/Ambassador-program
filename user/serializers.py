@@ -9,7 +9,11 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    referral_code = serializers.CharField(write_only=True, required=False)
+    referral_code = serializers.CharField(
+        write_only=True,
+        required=False,
+        help_text="Optional referral code to link accounts."
+    )
 
     class Meta:
         model = get_user_model()
@@ -23,7 +27,31 @@ class UserSerializer(serializers.ModelSerializer):
             "is_accepted_terms",
             "referral_code",
         )
-        extra_kwargs = {"password": {"write_only": True, "required": False}}
+        extra_kwargs = {
+            "password": {
+                "write_only": True,
+                "required": False,
+                "help_text": "Required for account creation."
+            },
+            "email": {
+                "help_text": "The user's email address. Must be unique."
+            },
+            "first_name": {
+                "help_text": "The user's first name."
+            },
+            "last_name": {
+                "help_text": "The user's last name."
+            },
+            "phone": {
+                "help_text": "The user's phone number."
+            },
+            "currency": {
+                "help_text": "The preferred currency for the user's account."
+            },
+            "is_accepted_terms": {
+                "help_text": "Boolean indicating if the user has accepted the terms and conditions."
+            },
+        }
 
     def create(self, validated_data):
         referral_code = validated_data.pop("referral_code", None)

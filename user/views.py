@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
 from django.shortcuts import render
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -20,6 +21,21 @@ signer = TimestampSigner()
 class RegisterView(APIView):
     http_method_names = ["post"]
 
+    @extend_schema(
+        summary="Register a new user",
+        description="Creates a new user account. An email confirmation link is sent to the provided email address.",
+        request=UserSerializer,
+        responses={
+            201: OpenApiResponse(
+                description="Account created. Check your email to confirm registration.",
+                response={"detail": "Account created. Please check your email to confirm registration."}
+            ),
+            400: OpenApiResponse(
+                description="Invalid data provided.",
+                response={"errors": "..."}
+            )
+        }
+    )
     def post(self, request, *args, **kwargs):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():

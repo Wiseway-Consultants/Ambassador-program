@@ -24,12 +24,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = getenv("DEBUG", False)
 
 ALLOWED_HOSTS = [
     "ambassador.savefryoil.com",
     "www.ambassador.savefryoil.com",
-    "15.156.115.46"
+    "15.156.115.46",
+    "localhost",
+    "0.0.0.0",
+    "127.0.0.1",
 ]
 
 USE_X_FORWARDED_HOST = True
@@ -50,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'drf_spectacular',
     'rest_framework',
     'user',
 ]
@@ -160,7 +164,8 @@ FRONTEND_URL = f"{getenv("SERVER_URL")}/users/auth"
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SIMPLE_JWT = {
