@@ -243,7 +243,7 @@ class QrCodeView(APIView):
             qr_url = f"https://savefryoil.com/ambassador-referrals/?refferal_id={user.referral_code}"
             qr_name = f"ambassador_{user.email}"
             qr_id = qrTigerAPI.create_qr_code_with_name(qr_url, qr_name)
-            user.qr_code_id = qr_id
+            user.referral_qr_code_id = qr_id
             user.save()
             return Response({"detail": "success"}, status=status.HTTP_200_OK)
         except Exception as e:
@@ -252,7 +252,7 @@ class QrCodeView(APIView):
     def get(self, request):
         user = request.user
 
-        qr_id = user.qr_code_id
+        qr_id = user.referral_qr_code_id
         if not qr_id:
             return Response({"error": "No QR code found."}, status=status.HTTP_400_BAD_REQUEST)
         qr_code_data = qrTigerAPI.get_qr_code_by_id(qr_id)
