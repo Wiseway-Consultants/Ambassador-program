@@ -3,138 +3,208 @@ info:
   title: ''
   version: 0.0.0
 paths:
-  /users/auth/confirm-email/:
-    get:
-      operationId: users_auth_confirm_email_retrieve
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: users_auth_confirm_email_create
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /users/auth/resend-confirmation/:
-    post:
-      operationId: users_auth_resend_confirmation_create
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /users/auth/reset-password/:
-    get:
-      operationId: users_auth_reset_password_retrieve
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: users_auth_reset_password_create
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /users/auth/reset-password/send/:
-    post:
-      operationId: users_auth_reset_password_send_create
-      tags:
-      - User Auth
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /users/profile/:
-    get:
-      operationId: Retrieve user's data
-      tags:
-      - profile
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    put:
-      operationId: Update user
-      tags:
-      - profile
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    patch:
-      operationId: Change password
-      tags:
-      - profile
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /users/profile/qr_codes/:
-    get:
-      operationId: Retrieve user qrCode
-      tags:
-      - QR Codes
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: Create user qrCode
-      tags:
-      - users
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
   /users/register/:
     post:
       operationId: Register a user
+      description: Creating inactive user account and sending him the confirmation email
       tags:
-      - users
+        - User
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/User'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/User'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/User'
         required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Account created. Please check your email to confirm registration.
+          description: ''
+
+
+  /users/profile/:
+    get:
+      operationId: Retrieve user
+      description: Depending on JWT token return user information
+      tags:
+        - User
       security:
-      - jwtAuth: []
-      - {}
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: john@doe.com
+                  first_name:
+                    type: string
+                    example: John
+                  last_name:
+                    type: string
+                    example: Doe
+                  phone:
+                    type: string
+                  currency:
+                    type: string
+                    example: GBP
+          description: 'User data'
+    put:
+      operationId: Update user
+      tags:
+        - User
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                phone:
+                  type: string
+                currency:
+                  type: string
+              required:
+                - email
+                - first_name
+                - last_name
+                - phone
+                - currency
+        required: true
       responses:
         '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-          description: ''
+          description: 'Update Successfully'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  email:
+                    type: array
+                    example: [This field is required]
+
+          description: 'Errors'
+    patch:
+      operationId: Change password
+      tags:
+        - User
+      security:
+        - jwtAuth: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_password:
+                  type: string
+                new_password:
+                  type: string
+              required:
+                - old_password
+                - new_password
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Password updated successfully
+          description: Password update successfully
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  new_password:
+                    type: array
+                    example: [ This password is too common., This password is entirely numeric.]
+
+          description: 'Errors'
+  /users/auth/reset-password/send/:
+    post:
+      operationId: Reset password
+      description: API sends a "reset password email" to provided email
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@gmail.com
+              required:
+                - email
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Reset Email sent to user
+          description: 'Reset email is successfully sent'
+        '404':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Such User doesn't exist
+          description: "User with such email doesn't exist"
+  /users/profile/qr_codes/:
+    get:
+      operationId: Retrieve user qrCode
+      tags:
+        - QR Codes
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: Create user qrCode
+      tags:
+        - QR Codes
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
   /users/token/obtain/:
     post:
       operationId: Retrieve token
@@ -142,7 +212,7 @@ paths:
         Takes a set of user credentials and returns an access and refresh JSON web
         token pair to prove the authentication of those credentials.
       tags:
-      - JWT token
+        - JWT token
       requestBody:
         content:
           application/json:
@@ -160,7 +230,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenObtainPair'
+                type: object
+                properties:
+                  refresh:
+                    type: string
+                  access:
+                    type: string
           description: ''
   /users/token/refresh/:
     post:
@@ -169,7 +244,7 @@ paths:
         Takes a refresh type JSON web token and returns an access type JSON web
         token if the refresh token is valid.
       tags:
-      - JWT token
+        - JWT token
       requestBody:
         content:
           application/json:
@@ -187,8 +262,64 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRefresh'
+                type: object
+                properties:
+                  access:
+                    type: string
           description: ''
+  /users/auth/confirm-email/:
+    get:
+      operationId: Confirm Email (with password)
+      description: |-
+        User gets an email with confirmation link. This link leads to this endpoint.
+        if token is not corrupt or expired, user's account is set to active.
+        Detail - user verify via GET method if password is already set and via post if they yet don't a password
+      tags:
+        - FYI endpoints
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: Confirm Email (no password)
+      description: |-
+        User gets an email with confirmation link. This link leads to this endpoint.
+        if token is not corrupt or expired, user's password is saved and account is set to active.
+        Detail - user verify via GET method if password is already set and via post if they yet don't a password
+      tags:
+        - FYI endpoints
+      responses:
+        '200':
+          description: No response body
+  /users/auth/resend-confirmation/:
+    post:
+      operationId: users_auth_resend_confirmation_create
+      tags:
+        - FYI endpoints
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /users/auth/reset-password/:
+    get:
+      operationId: users_auth_reset_password_retrieve
+      tags:
+        - FYI endpoints
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: users_auth_reset_password_create
+      tags:
+        - FYI endpoints
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+
 components:
   schemas:
     TokenObtainPair:
@@ -201,8 +332,8 @@ components:
           type: string
           writeOnly: true
       required:
-      - email
-      - password
+        - email
+        - password
     TokenRefresh:
       type: object
       properties:
@@ -213,8 +344,8 @@ components:
           type: string
           writeOnly: true
       required:
-      - access
-      - refresh
+        - access
+        - refresh
     User:
       type: object
       properties:
@@ -227,7 +358,8 @@ components:
         password:
           type: string
           writeOnly: true
-          description: Required for account creation.
+          description: Not required field, if user was created without password,
+                       he can set password via confirmation email we sent
           maxLength: 128
         first_name:
           type: string
@@ -254,10 +386,12 @@ components:
           writeOnly: true
           description: Optional referral code to link accounts.
       required:
-      - currency
-      - email
-      - first_name
-      - last_name
+        - currency
+        - email
+        - phone
+        - is_accepted_terms
+        - first_name
+        - last_name
   securitySchemes:
     jwtAuth:
       type: http
