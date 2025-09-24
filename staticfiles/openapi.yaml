@@ -292,7 +292,8 @@ paths:
           description: No response body
   /users/auth/resend-confirmation/:
     post:
-      operationId: users_auth_resend_confirmation_create
+      operationId: Resend Confirmation Email
+      description: If confirm link expires, this endpoint will send a new confirmation email
       tags:
         - FYI endpoints
       security:
