@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: ''
+  title: 'Save Fry Oil Ambassador API Documentation'
   version: 0.0.0
 paths:
   /users/register/:
@@ -102,7 +102,7 @@ paths:
                 properties:
                   email:
                     type: array
-                    example: [This field is required]
+                    example: [ This field is required ]
 
           description: 'Errors'
     patch:
@@ -144,7 +144,7 @@ paths:
                 properties:
                   new_password:
                     type: array
-                    example: [ This password is too common., This password is entirely numeric.]
+                    example: [ This password is too common., This password is entirely numeric. ]
 
           description: 'Errors'
   /users/auth/reset-password/send/:
@@ -195,7 +195,21 @@ paths:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrCode'
+          description: 'Retrieve user qrcode'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: No QR code found.
+          description: "No QR code found."
     post:
       operationId: Create user qrCode
       tags:
@@ -204,7 +218,24 @@ paths:
         - jwtAuth: [ ]
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: success
+          description: 'Successfully created referral qr code'
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+          description: "Error"
   /users/token/obtain/:
     post:
       operationId: Retrieve token
@@ -303,7 +334,8 @@ paths:
           description: No response body
   /users/auth/reset-password/:
     get:
-      operationId: users_auth_reset_password_retrieve
+      operationId: Password Reset
+      description: Endpoint render different html templates based on token. If token is expired or corrupted
       tags:
         - FYI endpoints
       security:
@@ -312,7 +344,8 @@ paths:
         '200':
           description: No response body
     post:
-      operationId: users_auth_reset_password_create
+      operationId: Password Reset
+      description: Endpoint receives token, new password and updates the user
       tags:
         - FYI endpoints
       security:
@@ -360,7 +393,7 @@ components:
           type: string
           writeOnly: true
           description: Not required field, if user was created without password,
-                       he can set password via confirmation email we sent
+            he can set password via confirmation email we sent
           maxLength: 128
         first_name:
           type: string
@@ -393,8 +426,225 @@ components:
         - is_accepted_terms
         - first_name
         - last_name
+    QrCode:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            totalUniqueScan:
+              type: integer
+              example: 0
+            scans:
+              type: integer
+              example: 0
+            smediaActivity:
+              type: array
+              items: { }
+              example: [ ]
+            device:
+              type: array
+              items: { }
+              example: [ ]
+            city:
+              type: array
+              items: { }
+              example: [ ]
+            totalScanByDate:
+              type: integer
+              example: 0
+            totalUniqueScanByDate:
+              type: integer
+              example: 0
+            unique:
+              type: array
+              items: { }
+              example: [ ]
+            country:
+              type: array
+              items: { }
+              example: [ ]
+            data:
+              type: array
+              items: { }
+              example: [ ]
+            graph:
+              type: array
+              items: { }
+              example: [ ]
+            campaign:
+              type: object
+              properties:
+                lock:
+                  type: object
+                  properties:
+                    active:
+                      type: boolean
+                      example: false
+                watchList:
+                  type: object
+                  properties:
+                    isWatching:
+                      type: boolean
+                      example: false
+                    date:
+                      type: string
+                      nullable: true
+                      example: null
+                gpsTrackData:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                      example: false
+                    trackNearQr:
+                      type: boolean
+                      example: false
+                    radius:
+                      type: integer
+                      example: 1
+                archive:
+                  type: boolean
+                  example: false
+                members:
+                  type: array
+                  items: { }
+                  example: [ ]
+                bulk:
+                  type: boolean
+                  example: false
+                scans:
+                  type: integer
+                  example: 0
+                scanCounter:
+                  type: integer
+                  example: 0
+                previousScan:
+                  type: integer
+                  example: 0
+                todayScan:
+                  type: integer
+                  example: 0
+                weekScans:
+                  type: array
+                  items: { }
+                  example: [ ]
+                previousWeekScans:
+                  type: array
+                  items: { }
+                  example: [ ]
+                scanLoop:
+                  type: boolean
+                  example: false
+                expiryDate:
+                  type: string
+                  nullable: true
+                  example: null
+                expiryScans:
+                  type: integer
+                  nullable: true
+                  example: null
+                expireByIP:
+                  type: boolean
+                  example: false
+                fileIds:
+                  type: array
+                  items: { }
+                  nullable: true
+                  example: null
+                blocked:
+                  type: boolean
+                  example: false
+                groupIds:
+                  type: array
+                  items: { }
+                  example: [ ]
+                _id:
+                  type: string
+                  example: "68d40960aca9313a13066022"
+                qrId:
+                  type: string
+                  example: "TITS"
+                qrType:
+                  type: string
+                  example: "qr2"
+                qrCategory:
+                  type: string
+                  example: "url"
+                shortUrl:
+                  type: string
+                  example: "https://qr.savefryoil.com/TITS"
+                redirectUrl:
+                  type: string
+                  example: "https://savefryoil.com/ambassador-referrals/?refferal_id=4tits-62d6-441e-ass-4e2ef7e9657a"
+                murlData:
+                  type: array
+                  items: { }
+                  example: [ ]
+                qrName:
+                  type: string
+                  example: "ambassadorTEST"
+                qrImage:
+                  type: string
+                  example: "https://media.qrtiger.com/qr/ambassador_adminadmincom-tits.png"
+                svgImage:
+                  type: string
+                  example: "https://media.qrtiger.com/svg/ambassador_adminadmincom-tits.svg"
+                owner:
+                  type: string
+                  example: "68c07ba5f7tities3b42e8c4ef"
+                subUserId:
+                  type: string
+                  nullable: true
+                  example: null
+                qrConfig:
+                  type: string
+                  example: '{"backgroundColor":null,"colorDark":"rgb(0,0,0)","colorType":"SINGLE_COLOR","gradientType":"linear","frameColor":"#054080","frameColor2":"#3a74c5","frameColorStyleType":"SINGLE_COLOR","frameGradientType":"linear","frameGradientStartColor":"#054080","frameGradientEndColor":"#f30505","frameText":"Scan me","eye_outer":"eyeOuter2","eye_inner":"eyeInner1","size":500,"qrData":"pattern0","transparentBkg":false,"logo":"https://media.qrtiger.com/images/2025/09/logo-(1)_82.png","color01":"rgb(0,0,0)"}'
+                scanData:
+                  type: array
+                  items: { }
+                  example: [ ]
+                qrHistory:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      redirectUrl:
+                        type: string
+                      scans:
+                        type: integer
+                      uniqueScans:
+                        type: integer
+                      _id:
+                        type: string
+                      createdBy:
+                        type: string
+                      action:
+                        type: string
+                      date:
+                        type: string
+                createdAt:
+                  type: string
+                  example: "2025-09-24T15:08:16.675Z"
+                updatedAt:
+                  type: string
+                  example: "2025-09-24T15:08:18.206Z"
+                urlUpdatedAt:
+                  type: string
+                  example: "2025-09-24T15:08:16.676Z"
+                __v:
+                  type: integer
+                  example: 3
+                folderId:
+                  type: string
+                  example: "68cadd0titsd85a5f29b"
+                id:
+                  type: string
+                  example: "68d40960ass13a13066024"
   securitySchemes:
     jwtAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+
