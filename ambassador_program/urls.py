@@ -14,15 +14,23 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from django.views.generic import TemplateView
 
+from ambassador_program.views import openapi_yaml
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('user.urls')),
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    path('api/schema.yaml', openapi_yaml, name='custom-schema'),
+    path(
+        'api/redoc/',
+        TemplateView.as_view(
+            template_name="redoc.html",
+            extra_context={"schema_url": "/api/schema.yaml"},  # URL to your custom schema
+        ),
+        name='redoc',
+    ),
 ]
