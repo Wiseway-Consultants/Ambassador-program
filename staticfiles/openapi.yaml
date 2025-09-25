@@ -415,6 +415,14 @@ components:
           type: string
           description: The user's last name.
           maxLength: 30
+        contact_name:
+          type: string
+          description: The preferred contact name.
+        restaurant_organisation_name:
+          type: string
+          description: User's Restaurant or Organization name
+        comments:
+          type: string
         phone:
           type: string
           title: Phone number
@@ -432,10 +440,8 @@ components:
           writeOnly: true
           description: Optional referral code to link accounts.
       required:
-        - currency
         - email
         - phone
-        - is_accepted_terms
         - first_name
         - last_name
     QrCode:
