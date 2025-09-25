@@ -74,9 +74,11 @@ class User(AbstractUser):
     last_name = models.CharField(_('last name'), max_length=30)
     phone = models.CharField(_('phone number'), max_length=30, blank=True)
     currency = models.CharField(_('currency'), max_length=3)
+    contact_name = models.CharField(_('contact name'), max_length=30, blank=True)
+    restaurant_organisation_name = models.CharField(_('restaurant organisation name'), max_length=64, blank=True)
+    comments = models.TextField(_('comments'), blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
     is_accepted_terms = models.BooleanField(default=False)
     referral_code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)  # Will be used for unique QRcode
     referral_qr_code_id = models.CharField(max_length=10, blank=True)
