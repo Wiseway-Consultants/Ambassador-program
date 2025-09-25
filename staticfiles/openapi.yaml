@@ -52,6 +52,15 @@ paths:
                   last_name:
                     type: string
                     example: Doe
+                  contact_name:
+                    type: string
+                    example: Manager
+                  restaurant_organisation_name:
+                    type: string
+                    example: KFC
+                  comments:
+                    type: string
+                    example: Good guy
                   phone:
                     type: string
                   currency:
@@ -76,16 +85,19 @@ paths:
                   type: string
                 last_name:
                   type: string
+                contact_name:
+                  type: string
+                  example: Manager
+                restaurant_organisation_name:
+                  type: string
+                  example: KFC
+                comments:
+                  type: string
+                  example: Good guy
                 phone:
                   type: string
                 currency:
                   type: string
-              required:
-                - email
-                - first_name
-                - last_name
-                - phone
-                - currency
         required: true
       responses:
         '200':
@@ -646,5 +658,3 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-
-
