@@ -11,7 +11,19 @@ class EmailUserAdmin(UserAdmin):
 
     fieldsets = (
         (None, {'fields': ('id', 'referral_code', 'email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'is_accepted_terms', 'is_verified', 'parent', 'parent_path', 'referral_qr_code_id')}),
+        (_('Personal info'), {'fields': (
+            'first_name',
+            'last_name',
+            'is_accepted_terms',
+        )}),
+        (_('Referral info'), {'fields': (
+            'parent',
+            'parent_path',
+            'referral_qr_code_id',
+            'contact_name',
+            'restaurant_organisation_name',
+            'comments'
+        )}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
         }),
