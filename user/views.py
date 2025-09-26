@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
 from django.shortcuts import render
@@ -9,20 +11,26 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
 
-from .qr_code_tiger_api import qrTigerAPI
+from user.utils.qr_code_tiger_api import qrTigerAPI
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
 from .utils.send_email import send_email
 
 User = get_user_model()
 signer = TimestampSigner()
 
+logger = logging.getLogger(__name__)
+
 
 class RegisterView(APIView):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
+
+        logger.info(f"Received Registration request with payload: {request.data}")
+
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
+            logger.error(f"serializer error {serializer.errors}")
             return Response(
                 {"errors": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
@@ -191,8 +199,6 @@ class ResetPasswordView(APIView):
             return render(request, "reset_password_success.html")
         except (SignatureExpired, BadSignature, User.DoesNotExist):
             return render(request, "reset_password.html", {"error": "Invalid or expired reset link."})
-
-
 
 
 class EmailTokenObtainPairView(TokenObtainPairView):
