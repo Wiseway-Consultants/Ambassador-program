@@ -178,3 +178,45 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,                 # blacklist old refresh token if rotated
     "AUTH_HEADER_TYPES": ("Bearer",),                 # Authorization: Bearer <token>
 }
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} {name} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "file": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "formatter": "verbose",
+            "filename": path.join(BASE_DIR, "logs", "drf.log"),
+            "when": "D",         # Rotate daily
+            "interval": 1,       # Every 1 day
+            "backupCount": 30,   # Keep 30 days
+            "encoding": "utf8",
+        },
+    },
+    "root": {
+        "handlers": ["console", "file"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "ambassador": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+    },
+}

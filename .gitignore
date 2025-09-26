@@ -5,3 +5,4 @@
 /.env
 /staticfiles/admin/
 /staticfiles/rest_framework/
+/logs/
