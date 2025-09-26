@@ -9,10 +9,6 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    referral_code = serializers.CharField(
-        write_only=True,
-        required=False
-    )
 
     class Meta:
         model = get_user_model()
