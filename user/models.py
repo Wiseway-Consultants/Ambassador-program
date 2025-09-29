@@ -1,10 +1,12 @@
 import uuid
 
 from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
+
+from prospect.models import Prospect
 
 
 class CustomUserManager(BaseUserManager):
@@ -12,30 +14,42 @@ class CustomUserManager(BaseUserManager):
     Custom user model manager where email is the unique identifiers
     for authentication instead of usernames.
     """
-
-    def create_user(self, email, password=None, referral_code=None, **extra_fields):
-        """
-        Create and save a User with the given email and password.
-        """
-        if not email:
-            raise ValueError(_('The Email must be set'))
+    def create_user(self, email, phone, password=None, referral_code=None, **extra_fields):
+        if not email or not phone:
+            raise ValueError(_('Email and Phone must be set'))
 
         email = self.normalize_email(email)
 
-        # If parent_id is provided, fetch the User instance
-        parent = None
-        if referral_code:
-            try:
-                parent = self.model.objects.get(referral_code=referral_code)
-            except self.model.DoesNotExist:
-                raise ValueError(_('Parent user does not exist'))
+        inviter_user = None
 
-        user = self.model(email=email, parent=parent, **extra_fields)
+        prospect = Prospect.objects.filter(Q(email=email) | Q(phone=phone)).first()
+        # CASE A: inviter from referral code
+        if referral_code:
+            inviter_user = User.objects.filter(referral_code=referral_code).first()
+
+        # CASE B: user existed as prospect
+        if prospect:
+            inviter_user = prospect.invited_by_user
+
+        user = self.model(email=email, phone=phone, **extra_fields)
+
+        if prospect:
+            user.is_prospect = True
+
+        # link referral
+        if inviter_user:
+            user.invited_by_user = inviter_user
+
         if password:
             user.set_password(password)
         else:
             user.set_unusable_password()
+
         user.save()
+        if prospect:
+            prospect.registered_user = user
+            prospect.save()
+
         return user
 
     def create_superuser(self, email, password, **extra_fields):
@@ -56,30 +70,22 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
 
-    # Referral tracking
-    parent = models.ForeignKey(
-        'self',
+    invited_by_user = models.ForeignKey(
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="children"
-    )
-    parent_path = ArrayField(
-        models.IntegerField(),
-        default=list,
-        blank=True
+        related_name="invited_users"
     )
 
     first_name = models.CharField(_('first name'), max_length=30)
     last_name = models.CharField(_('last name'), max_length=30)
     phone = models.CharField(_('phone number'), max_length=30, blank=True)
     currency = models.CharField(_('currency'), max_length=3)
-    contact_name = models.CharField(_('contact name'), max_length=30, blank=True)
-    restaurant_organisation_name = models.CharField(_('restaurant organisation name'), max_length=64, blank=True)
-    comments = models.TextField(_('comments'), blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_accepted_terms = models.BooleanField(default=False)
+    is_prospect = models.BooleanField(default=False)
     referral_code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)  # Will be used for unique QRcode
     referral_qr_code_id = models.CharField(max_length=10, blank=True)
     email = models.EmailField(_('email address'), unique=True)
@@ -93,11 +99,6 @@ class User(AbstractUser):
     ]
 
     objects = CustomUserManager()
-
-    def save(self, *args, **kwargs):
-        if self.parent:
-            self.parent_path = self.parent.parent_path + [self.parent.id]
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email
