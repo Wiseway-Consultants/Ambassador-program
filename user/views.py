@@ -11,9 +11,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
 
-from user.utils.qr_code_tiger_api import qrTigerAPI
+from utils.qr_code_tiger_api import qrTigerAPI
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
-from .utils.send_email import send_email
+from utils.send_email import send_email
 
 User = get_user_model()
 signer = TimestampSigner()
@@ -39,20 +39,11 @@ class RegisterView(APIView):
         with transaction.atomic():
             validated_data = serializer.validated_data
             password = validated_data.pop("password", None)
-
-            if password:
-                user = User.objects.create_user(
-                    **validated_data,
-                    password=password,
-                    is_active=False
-                )
-            else:
-                user = User.objects.create_user(
-                    **validated_data,
-                    is_active=False
-                )
-                user.set_unusable_password()
-                user.save()
+            user = User.objects.create_user(
+                **validated_data,
+                password=password,
+                is_active=False
+            )
 
             token = signer.sign(user.email)
             confirm_url = f"{settings.FRONTEND_URL}/confirm-email/?token={token}"

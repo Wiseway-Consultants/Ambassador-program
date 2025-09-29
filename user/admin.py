@@ -17,12 +17,9 @@ class EmailUserAdmin(UserAdmin):
             'is_accepted_terms',
         )}),
         (_('Referral info'), {'fields': (
-            'parent',
-            'parent_path',
             'referral_qr_code_id',
-            'contact_name',
-            'restaurant_organisation_name',
-            'comments'
+            'invited_by_user',
+            'is_prospect'
         )}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
