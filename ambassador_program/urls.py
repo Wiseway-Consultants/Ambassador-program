@@ -24,6 +24,7 @@ from ambassador_program.views import openapi_yaml
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('user.urls')),
+    path('prospects/', include('prospect.urls')),
     path('api/schema.yaml', openapi_yaml, name='custom-schema'),
     path(
         'api/redoc/',
