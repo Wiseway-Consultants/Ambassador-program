@@ -13,7 +13,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    restart: always
 
   prod:
     build: .
@@ -28,9 +27,23 @@ services:
         condition: service_healthy
     restart: always
 
+  refresher:
+    build:
+      context: .
+      dockerfile: ./refresher_Dockerfile
+    command: python refresher.py
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    volumes:
+      - ./:/app
+
   db:
     image: postgres:17
-    platform: linux/arm64/v8
+    platform: linux/amd64/v3 # Use linux/arm64/v8 on prod and linux/amd64/v3 on dev
     restart: always
     env_file:
       - .env
