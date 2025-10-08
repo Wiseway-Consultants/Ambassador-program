@@ -19,7 +19,6 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -46,7 +45,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
 
 # Application definition
 
@@ -94,7 +92,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ambassador_program.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -108,7 +105,6 @@ DATABASES = {
         "PORT": getenv("POSTGRES_PORT", "5432"),
     }
 }
-
 
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -126,7 +122,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -159,7 +154,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.sendgrid.net"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"   # literally the string "apikey"
+EMAIL_HOST_USER = "apikey"  # literally the string "apikey"
 EMAIL_HOST_PASSWORD = getenv("EMAIL_SEND_GRID_API_KEY")
 DEFAULT_FROM_EMAIL = "vlad@savefryoil.com"
 
@@ -171,14 +166,16 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),   # default: 5 minutes
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),      # default: 1 day
-    "ROTATE_REFRESH_TOKENS": False,                   # if True → new refresh token each time
-    "BLACKLIST_AFTER_ROTATION": True,                 # blacklist old refresh token if rotated
-    "AUTH_HEADER_TYPES": ("Bearer",),                 # Authorization: Bearer <token>
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # default: 5 minutes
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # default: 1 day
+    "ROTATE_REFRESH_TOKENS": False,  # if True → new refresh token each time
+    "BLACKLIST_AFTER_ROTATION": True,  # blacklist old refresh token if rotated
+    "AUTH_HEADER_TYPES": ("Bearer",),  # Authorization: Bearer <token>
 }
 
 LOGGING = {
@@ -199,9 +196,9 @@ LOGGING = {
             "class": "logging.handlers.TimedRotatingFileHandler",
             "formatter": "verbose",
             "filename": path.join(BASE_DIR, "logs", "drf.log"),
-            "when": "D",         # Rotate daily
-            "interval": 1,       # Every 1 day
-            "backupCount": 30,   # Keep 30 days
+            "when": "D",  # Rotate daily
+            "interval": 1,  # Every 1 day
+            "backupCount": 30,  # Keep 30 days
             "encoding": "utf8",
         },
     },

@@ -3,8 +3,10 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from prospect.models import Prospect
+from prospect.permissions import IsStaffUser
 from prospect.serializers import ProspectSerializer
 from prospect.utils import get_full_downline
 
@@ -43,5 +45,16 @@ class ProspectView(APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StaffProspectViewSet(ModelViewSet):
+    queryset = Prospect.objects.all().order_by('-id')
+    serializer_class = ProspectSerializer
+    permission_classes = [IsStaffUser]
+
+    def create(self, request, *args, **kwargs):  # Overwrite POST method
+        data = request.data
+
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
