@@ -13,12 +13,13 @@ logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 class GoHighLevelAPI:
     def __init__(self):
         self.headers = {
             "Version": "2021-07-28",
             "Content-Type": "application/json",
-            "Authorization": "Bearer <KEY>",
+            "Authorization": "Bearer ",
         }
         self.base_url = "https://services.leadconnectorhq.com"
         self.auth_file_path = Path(BASE_DIR, "auth", "ghl_jwt_auth.json")

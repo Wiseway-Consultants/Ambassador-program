@@ -2,9 +2,42 @@ from os import path
 
 from django.conf import settings
 from django.http import HttpResponse
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from utils.ghl_api import GHL_API
 
 
 def openapi_yaml(request):
     filepath = path.join(settings.BASE_DIR, "staticfiles", "openapi.yaml")
     with open(filepath, "r") as f:
         return HttpResponse(f.read(), content_type="application/yaml")
+
+
+def check_auth_key(headers):
+    if "x-api-key" not in headers or headers["x-api-key"] != settings.ADMIN_API_KEY:
+        raise PermissionError("Not Authorized")
+
+
+class GHLview(APIView):
+    def get(self, request):
+        headers = request.headers
+        try:
+            check_auth_key(headers)
+            GHL_API.refresh_agency_token()
+            return Response("OK", status=200)
+        except Exception as e:
+            return Response(f"Error: {e}", status=400)
+
+    def post(self, request):
+        headers = request.headers
+        try:
+            check_auth_key(headers)
+            data = request.data
+            country_code = data["country_code"]
+            location_access_token = GHL_API.get_location_access_token(country_code)
+            return Response({"access_token": location_access_token}, status=200)
+
+        except Exception as e:
+            return Response(f"Error: {e}", status=400)
+
