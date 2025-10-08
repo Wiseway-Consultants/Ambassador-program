@@ -12,6 +12,7 @@ def refresher():
     GHL_API.refresh_agency_token()  # GHL access token
 
 
+print("Initial refresh")
 GHL_API.refresh_agency_token()
 schedule.every(50).minutes.do(refresher)
 # schedule.every(10).seconds.do(refresher)
