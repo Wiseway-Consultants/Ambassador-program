@@ -13,6 +13,7 @@ class ProspectSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "phone",
+            "country",
             "comments",
             "contact_name",
             "restaurant_organisation_name",

@@ -7,11 +7,12 @@ class ProspectAdmin(admin.ModelAdmin):
     list_display = (
         "email",
         "phone",
+        "country",
         "invited_by_user",
         "registered_user",
         "created_at",
     )
-    list_filter = ("created_at", "invited_by_user")
+    list_filter = ("created_at", "invited_by_user", "country")
     search_fields = ("email", "phone")
     autocomplete_fields = ("invited_by_user", "registered_user")
     readonly_fields = ("created_at",)
