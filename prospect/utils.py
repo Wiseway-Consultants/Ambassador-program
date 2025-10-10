@@ -33,3 +33,16 @@ def get_full_downline(user_id):
         cursor.execute(query, [user_id, user_id])
         ids = [row[0] for row in cursor.fetchall()]
     return Prospect.objects.filter(id__in=ids).order_by('invited_by_user_id')
+
+
+def get_country_code_by_currency(currency: str) -> str:
+    currency = currency.upper()
+    currency_to_country = {
+        "GBP": "GB",
+        "USD": "US",
+        "EUR": "IE",
+        "CAD": "CA",
+        "AUD": "AU",
+        "NZD": "NZ",
+    }
+    return currency_to_country[currency]
