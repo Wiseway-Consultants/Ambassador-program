@@ -31,6 +31,22 @@ class GoHighLevelAPI:
             "NZ": "jQZrYYLodjByNxqCrehy",
             "US": "EhYpQQPMMPBIvrlubdE4"
         }
+        self.get_pipelineId_by_locationId = {
+            "dNMN3zCANRj6BuScTLfC": "48oHU0QTQcxSoIl8cuBu",  # GB
+            "4Nh160QNZTSu12oiCecp": "ZQBFmmJetqVtoDl3y73p",  # AU
+            "tRAT9Du0M1EoncfpfJux": "pSpfLXy4c55vJJzc1431",  # CA
+            "rfqijwLULaFKIg2m0oP3": "Z34If6HGBJc2J20jqbBz",  # IE
+            "jQZrYYLodjByNxqCrehy": "ikwZZCZHHgT4pp3AVN5g",  # NZ
+            "EhYpQQPMMPBIvrlubdE4": "zqaVu9yon8yO4QMyr81A",  # US
+        }
+
+    @staticmethod
+    def create_headers(access_token: str) -> dict:
+        return {
+            "Version": "2021-07-28",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {access_token}",
+        }
 
     def refresh_agency_token(self):
         try:
@@ -64,11 +80,10 @@ class GoHighLevelAPI:
         except Exception as ex:
             logger.error('REFRESHER ERROR: ', ex)
 
-    def get_location_access_token(self, country_code):
+    def get_location_access_token(self, location_id):
         with open(self.auth_file_path, "r") as file:
             tokens = json.load(file)
         agency_access_token = tokens["access_token"]
-        location_id = self.country_to_locationID[country_code.upper()]
         response = requests.post(
             url=f"{self.base_url}/oauth/locationToken",
             headers={
@@ -83,6 +98,45 @@ class GoHighLevelAPI:
             }
         )
         return response.json()["access_token"]
+
+    def create_contact(self, data, location_id):
+        try:
+            access_token = self.get_location_access_token(location_id)
+            data["locationId"] = location_id
+            request = requests.post(
+                f"{self.base_url}/contacts",
+                headers=self.create_headers(access_token),  # Create header with location access token
+                json=data
+            )
+            response = request.json()
+
+            if request.status_code != 201:
+                logger.info(f"Error while creating contact\n{response}")
+            else:
+                logger.info(f"Contact created successfully\n{response}")
+            return response
+        except Exception as ex:
+            logger.error(f"Error creating contact: {ex}")
+            raise ex
+
+    def create_opportunity(self, data, location_id):
+        try:
+            access_token = self.get_location_access_token(location_id)
+            pipeline_id = self.get_pipelineId_by_locationId[location_id]
+
+            # Insert dynamic ids to request's body
+            data["pipelineId"] = pipeline_id
+            data["locationId"] = location_id
+
+            request = requests.post(
+                f"{self.base_url}/opportunities/",
+                headers=self.create_headers(access_token),
+                json=data
+            )
+            return request.json()
+        except Exception as ex:
+            logger.error(f"Error creating opportunity: {ex}")
+            raise ex
 
 
 GHL_API = GoHighLevelAPI()
