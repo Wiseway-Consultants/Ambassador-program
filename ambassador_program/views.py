@@ -34,8 +34,8 @@ class GHLview(APIView):
         try:
             check_auth_key(headers)
             data = request.data
-            country_code = data["country_code"]
-            location_access_token = GHL_API.get_location_access_token(country_code)
+            location_id = data["location_id"]
+            location_access_token = GHL_API.get_location_access_token(location_id)
             return Response({"access_token": location_access_token}, status=200)
 
         except Exception as e:
