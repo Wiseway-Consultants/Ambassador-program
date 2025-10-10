@@ -43,7 +43,7 @@ services:
 
   db:
     image: postgres:17
-    platform: linux/amd64/v3 # Use linux/arm64/v8 on prod and linux/amd64/v3 on dev
+    platform: linux/arm64/v8 # Use linux/arm64/v8 on prod and linux/amd64/v3 on dev
     restart: always
     env_file:
       - .env
