@@ -59,7 +59,7 @@ class StaffProspectViewSet(ModelViewSet):
             return Prospect.objects.all().order_by('-id')
 
         user_country = get_country_code_by_currency(user.currency)
-        return Prospect.objects.filter(country__iexact=user_country).order_by('-id')
+        return Prospect.objects.all().filter(country__iexact=user_country).order_by('-id')
 
     def create(self, request, *args, **kwargs):  # Overwrite POST method
         data = request.data
