@@ -22,10 +22,20 @@ class UserSerializer(serializers.ModelSerializer):
             "currency",
             "is_accepted_terms",
             "referral_code",
+            "is_staff",
+            "is_superuser"
         )
         extra_kwargs = {
             "password": {
                 "write_only": True,
+                "required": False,
+            },
+            "is_staff": {
+                "read_only": True,
+                "required": False,
+            },
+            "is_superuser": {
+                "read_only": True,
                 "required": False,
             }
         }
