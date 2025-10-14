@@ -6,7 +6,7 @@ class Prospect(models.Model):
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=11)
+    phone = models.CharField(max_length=16)
     country = models.CharField(max_length=2, blank=True, null=True)
     comments = models.TextField(blank=True)
     contact_name = models.CharField(max_length=64)
