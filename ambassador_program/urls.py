@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from ambassador_program.views import openapi_yaml, GHLview
+from ambassador_program.views import openapi_yaml, GHLview, QRCodeView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -35,4 +35,5 @@ urlpatterns = [
         ),
         name='redoc',
     ),
+    path('qr/static/', QRCodeView.as_view(), name='qr-static'),
 ]

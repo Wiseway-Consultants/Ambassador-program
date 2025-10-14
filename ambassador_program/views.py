@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from utils.ghl_api import GHL_API
+from utils.qr_code_tiger_api import qrTigerAPI
 
 
 def openapi_yaml(request):
@@ -37,6 +38,22 @@ class GHLview(APIView):
             location_id = data["location_id"]
             location_access_token = GHL_API.get_location_access_token(location_id)
             return Response({"access_token": location_access_token}, status=200)
+
+        except Exception as e:
+            return Response(f"Error: {e}", status=400)
+
+
+class QRCodeView(APIView):
+
+    def post(self, request):
+        headers = request.headers
+        try:
+            check_auth_key(headers)
+
+            data = request.data
+            qr_url = data["qr_url"]
+            qr_code_data = qrTigerAPI.create_static_qr_code(qr_url)
+            return Response(qr_code_data, status=200)
 
         except Exception as e:
             return Response(f"Error: {e}", status=400)
