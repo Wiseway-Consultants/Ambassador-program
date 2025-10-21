@@ -25,6 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('user.urls')),
     path('prospects/', include('prospect.urls')),
+    path('commission/', include('commission.urls')),
     path('ghl/token/', GHLview.as_view(), name='ghl-token'),
     path('api/schema.yaml', openapi_yaml, name='custom-schema'),
     path(
