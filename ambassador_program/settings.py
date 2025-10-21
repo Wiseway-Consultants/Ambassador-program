@@ -151,12 +151,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"  # literally the string "apikey"
+EMAIL_HOST_USER = "no-reply@savefryoil.com"
 EMAIL_HOST_PASSWORD = getenv("EMAIL_SEND_GRID_API_KEY")
-DEFAULT_FROM_EMAIL = "vlad@savefryoil.com"
+DEFAULT_FROM_EMAIL = "SaveFryOil App<no-reply@savefryoil.com>"
 
 FRONTEND_URL = f"{getenv("SERVER_URL")}/users/auth"
 
