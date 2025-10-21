@@ -17,7 +17,9 @@ class ProspectSerializer(serializers.ModelSerializer):
             "comments",
             "contact_name",
             "restaurant_organisation_name",
+            "ghl_contact_id",
+            "ghl_opportunity_id",
             "deal_completed",
             "created_at"
         )
-        read_only_fields = ("deal_completed", "created_at")
+        read_only_fields = ("deal_completed", "created_at", "ghl_contact_id", "ghl_opportunity_id")
