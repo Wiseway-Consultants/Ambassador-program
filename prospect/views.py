@@ -53,13 +53,12 @@ class StaffProspectViewSet(ModelViewSet):
     serializer_class = ProspectSerializer
     permission_classes = [IsStaffUser]
 
-    def get_queryset(self):  # return different queryset if user is not superuser
+    def get_queryset(self):
         user = self.request.user
         if user.is_superuser:
             return Prospect.objects.all().order_by('-id')
 
-        user_country = get_country_code_by_currency(user.currency)
-        return Prospect.objects.all().filter(country=user_country).order_by('-id')
+        return Response({"message": "You don't have permission to perform this action."})
 
     def create(self, request, *args, **kwargs):  # Overwrite POST method
         data = request.data
