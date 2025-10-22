@@ -5,6 +5,7 @@ from .models import Prospect
 @admin.register(Prospect)
 class ProspectAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "email",
         "phone",
         "country",
