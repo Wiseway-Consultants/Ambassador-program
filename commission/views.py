@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from commission.models import Commission
+from commission.serializers import CommissionListSerializer
 from prospect.models import Prospect
 from prospect.permissions import IsStaffUser
 from prospect.utils import get_invitation_user_chain_from_prospect
@@ -57,3 +58,12 @@ class CommissionClaimView(APIView):
 
             except Exception as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CommissionListView(ListAPIView):
+    serializer_class = CommissionListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        return Commission.objects.filter(user=user)
