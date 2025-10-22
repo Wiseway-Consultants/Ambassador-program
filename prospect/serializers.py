@@ -21,6 +21,14 @@ class ProspectSerializer(serializers.ModelSerializer):
             "ghl_contact_id",
             "ghl_opportunity_id",
             "deal_completed",
+            "claimed",
             "created_at"
         )
-        read_only_fields = ("invited_by_user", "deal_completed", "created_at", "ghl_contact_id", "ghl_opportunity_id")
+        read_only_fields = (
+            "invited_by_user",
+            "deal_completed",
+            "created_at",
+            "ghl_contact_id",
+            "ghl_opportunity_id",
+            "claimed"
+        )
