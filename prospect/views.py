@@ -57,8 +57,7 @@ class StaffProspectViewSet(ModelViewSet):
         user = self.request.user
         if user.is_superuser:
             return Prospect.objects.all().order_by('-id')
-
-        return Response({"message": "You don't have permission to perform this action."})
+        return Prospect.objects.none()
 
     def create(self, request, *args, **kwargs):  # Overwrite POST method
         data = request.data
