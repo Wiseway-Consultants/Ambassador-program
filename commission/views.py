@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import status
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -39,16 +40,20 @@ class CommissionClaimView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
-            users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
-            commission_level = 0
-            for user in users_invitation_chain:
-                Commission.objects.create(
-                    prospect=prospect,
-                    number_of_frylows=number_of_frylows,
-                    user=user,
-                    commission_tree_level=commission_level,
-                )
-                commission_level += 1
-            prospect.claimed = True
-            prospect.save()
-            return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
+            try:
+                users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
+                commission_level = 0
+                for user in users_invitation_chain:
+                    Commission.objects.create(
+                        prospect=prospect,
+                        number_of_frylows=number_of_frylows,
+                        user=user,
+                        commission_tree_level=commission_level,
+                    )
+                    commission_level += 1
+                prospect.claimed = True
+                prospect.save()
+                return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
+
+            except Exception as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

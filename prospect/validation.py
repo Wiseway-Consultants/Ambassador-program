@@ -25,8 +25,4 @@ def validate_prospect(data):
         if not isinstance(value, expected_type):
             raise TypeError(f"Field '{field}' must be of type {expected_type}, got {type(value)}")
 
-    # Optional: validate email format
-    if "@" not in data["email"]:
-        raise ValueError("Invalid email format")
-
     return True  # Payload is valid
