@@ -46,3 +46,18 @@ def get_country_code_by_currency(currency: str) -> str:
         "NZD": "NZ",
     }
     return currency_to_country[currency]
+
+
+def get_invitation_user_chain_from_prospect(prospect):
+    """
+    Returns a list of user IDs in the invitation chain for a given prospect.
+    The order is: direct inviter first, then their inviter, and so on up the chain.
+    """
+    chain_ids = []
+    user = prospect.invited_by_user
+
+    while user or len(chain_ids) == 7:
+        chain_ids.append(user)
+        user = user.invited_by_user  # Move up the chain
+
+    return chain_ids
