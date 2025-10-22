@@ -14,6 +14,7 @@ class Prospect(models.Model):
     ghl_contact_id = models.CharField(max_length=32, blank=True, null=True)
     ghl_opportunity_id = models.CharField(max_length=32, blank=True, null=True)
     deal_completed = models.BooleanField(default=False)
+    claimed = models.BooleanField(default=False)
     invited_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
