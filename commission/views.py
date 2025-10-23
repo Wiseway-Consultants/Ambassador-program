@@ -61,6 +61,7 @@ class CommissionClaimView(APIView):
 
 
 class CommissionListView(ListAPIView):
+    permission_classes = [IsAuthenticated,]
     serializer_class = CommissionListSerializer
 
     def get_queryset(self):
