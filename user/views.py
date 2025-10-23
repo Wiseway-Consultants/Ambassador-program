@@ -237,7 +237,7 @@ class QrCodeView(APIView):
 
         try:
 
-            qr_url = f"https://savefryoil.com/ambassador-referrals/?refferal_id={user.referral_code}"
+            qr_url = f"https://savefryoil.com/ambassador-referrals/?refferal_code={user.referral_code}"
             qr_name = f"ambassador_{user.email}"
             qr_id = qrTigerAPI.create_qr_code_with_name(qr_url, qr_name)
             user.referral_qr_code_id = qr_id
