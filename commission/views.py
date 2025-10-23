@@ -65,5 +65,7 @@ class CommissionListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if user.is_superuser:
+            return Commission.objects.all()
 
         return Commission.objects.filter(user=user)
