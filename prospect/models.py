@@ -11,6 +11,7 @@ class Prospect(models.Model):
     comments = models.TextField(blank=True)
     contact_name = models.CharField(max_length=64)
     restaurant_organisation_name = models.CharField(max_length=64)
+    ghl_location_id = models.CharField(max_length=32, blank=True, null=True)
     ghl_contact_id = models.CharField(max_length=32, blank=True, null=True)
     ghl_opportunity_id = models.CharField(max_length=32, blank=True, null=True)
     deal_completed = models.BooleanField(default=False)
