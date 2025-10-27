@@ -1,3 +1,4 @@
+import logging
 import uuid
 
 from django.contrib.auth.base_user import BaseUserManager
@@ -7,6 +8,8 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from prospect.models import Prospect
+
+logger = logging.getLogger(__name__)
 
 
 class CustomUserManager(BaseUserManager):
@@ -24,8 +27,10 @@ class CustomUserManager(BaseUserManager):
 
         prospect = Prospect.objects.filter(Q(email=email) | Q(phone=phone)).first()
         # CASE A: inviter from referral code
+        logger.info(f"Refferal Code {referral_code}")
         if referral_code:
             inviter_user = User.objects.filter(referral_code=referral_code).first()
+            logger.info(f"User: {inviter_user} is referring to prospect")
 
         # CASE B: user existed as prospect
         if prospect:

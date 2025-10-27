@@ -9,7 +9,12 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    referral_code = serializers.CharField(required=False)
+    referral_code = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        write_only=True
+    )
 
     class Meta:
         model = get_user_model()
@@ -27,25 +32,21 @@ class UserSerializer(serializers.ModelSerializer):
             "is_superuser"
         )
 
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "is_staff", "is_superuser")
 
         extra_kwargs = {
             "password": {
                 "write_only": True,
                 "required": False,
-            },
-            "is_staff": {
-                "read_only": True,
-                "required": False,
-            },
-            "is_superuser": {
-                "read_only": True,
-                "required": False,
             }
         }
 
     def create(self, validated_data):
+        referral_code = validated_data.pop("referral_code", None)
+        if referral_code == "":
+            referral_code = None
         return get_user_model().objects.create_user(
+            referral_code=referral_code,
             **validated_data
         )
 
