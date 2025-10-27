@@ -20,7 +20,8 @@ class EmailUserAdmin(UserAdmin):
         (_('Referral info'), {'fields': (
             'referral_qr_code_id',
             'invited_by_user',
-            'is_prospect'
+            'is_prospect',
+            'qr_code_bundles'
         )}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
