@@ -8,7 +8,8 @@ from .views import (EmailTokenObtainPairView,
                     ResendConfirmationView,
                     SendResetPasswordView,
                     ResetPasswordView,
-                    QrCodeView
+                    QrCodeView,
+                    StaffQrCodeView
                     )
 
 urlpatterns = [
@@ -21,4 +22,5 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("profile/qr_codes/", QrCodeView.as_view(), name="qr-codes"),
+    path("profile/qr_codes/bundle/", StaffQrCodeView.as_view(), name="bundle-qr-codes"),
 ]

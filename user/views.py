@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
 
+from prospect.permissions import IsStaffUser
 from utils.qr_code_tiger_api import qrTigerAPI
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
 from utils.send_email import send_email
@@ -254,3 +255,55 @@ class QrCodeView(APIView):
             return Response({"error": "No QR code found."}, status=status.HTTP_400_BAD_REQUEST)
         qr_code_data = qrTigerAPI.get_qr_code_by_id(qr_id)
         return Response(qr_code_data, status=status.HTTP_200_OK)
+
+
+class StaffQrCodeView(APIView):
+    permission_classes = [IsStaffUser,]
+
+    def post(self, request):
+        user = request.user
+
+        try:
+            data = request.data
+            code_bundle_type = data["code_bundle_type"]
+            if code_bundle_type not in ["Industry", "Affinity", "B2B"]:
+                return Response({"error": "code_bundle_type is not valid."}, status=status.HTTP_400_BAD_REQUEST)
+
+            qr_url = None
+            qr_frame_text = None
+            if code_bundle_type == "Industry":
+                qr_url = (f"https://savefryoil.retool.com/embedded/public/98912f22-4534-4209-af8e-d6d4e16dc706"
+                          f"?referral_code={user.referral_code}")
+                qr_frame_text = "Industry"
+            if code_bundle_type == "Affinity":
+                qr_url = "https://savefryoil.retool.com/embedded/public/6330dac3-e5e7-428e-b675-66cf44e65c61"
+                qr_frame_text = "Affinity"
+            if code_bundle_type == "B2B":
+                qr_url = "https://savefryoil.retool.com/embedded/public/e556ad0c-c4c0-4eaa-8f5d-b49753bc4f8a"
+                qr_frame_text = "B2B"
+
+            qr_name = f"Code Bundle {user.email}"
+
+            qr_id = qrTigerAPI.create_bundle_qr_code_with_name(qr_url, qr_frame_text, qr_name)
+            bundle_dict = user.qr_code_bundles
+            bundle_dict[code_bundle_type] = qr_id
+            user.qr_code_bundles = bundle_dict
+            user.save()
+            return Response({"detail": "success"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        user = request.user
+
+        qr_code_bundles_id = user.qr_code_bundles
+        if not qr_code_bundles_id:
+            return Response({"error": "No QR code bundles found."}, status=status.HTTP_400_BAD_REQUEST)
+
+        qr_codes_data = {}
+        for qr_name, qr_code_id in qr_code_bundles_id.items():
+            qr_code_data = qrTigerAPI.get_qr_code_by_id(qr_code_id)
+            qr_codes_data[qr_name] = qr_code_data
+
+        return Response(qr_codes_data, status=status.HTTP_200_OK)
+
