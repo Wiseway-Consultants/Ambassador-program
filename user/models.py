@@ -93,6 +93,7 @@ class User(AbstractUser):
     is_prospect = models.BooleanField(default=False)
     referral_code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)  # Will be used for unique QRcode
     referral_qr_code_id = models.CharField(max_length=10, blank=True)
+    qr_code_bundles = models.JSONField(default=dict, blank=True, null=False)
     email = models.EmailField(_('email address'), unique=True)
 
     USERNAME_FIELD = 'email'
