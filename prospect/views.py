@@ -20,6 +20,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
 
+from utils.send_email import send_notification_email
+
 logger = logging.getLogger(__name__)
 
 
@@ -36,6 +38,7 @@ class ProspectView(APIView):
         Create a prospect either by a User (default)
         or by another Prospect (if `invited_by_prospect_id` is provided).
         """
+        user = request.user
         serializer = ProspectSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
@@ -49,7 +52,18 @@ class ProspectView(APIView):
                 )
 
             # Default case: invited by authenticated user
-            prospect = serializer.save(invited_by_user=request.user)
+            prospect = serializer.save(invited_by_user=user)
+
+            # Notification for Relationship Managers if their ambassador invite a prospect
+            inviter_user = user.invited_by_user
+            logger.info(inviter_user)
+            if inviter_user and inviter_user.is_staff:
+
+                send_notification_email(
+                    to_user=inviter_user,
+                    notification_object=prospect,
+                    notification_type="prospect"
+                )
 
             return Response(
                 ProspectSerializer(prospect).data,

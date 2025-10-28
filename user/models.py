@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from prospect.models import Prospect
+from utils.send_email import send_notification_email
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ class CustomUserManager(BaseUserManager):
         # link referral
         if inviter_user:
             user.invited_by_user = inviter_user
+            # Send email notification to User who invited this ambassador
+            send_notification_email(to_user=inviter_user, notification_object=user, notification_type="user")
 
         if password:
             user.set_password(password)
