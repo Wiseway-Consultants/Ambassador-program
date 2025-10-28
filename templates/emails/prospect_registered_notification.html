@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Ambassador Registration</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">New Prospect Registered! 🎉</h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                                Great news! Your ambassador has registered a new Prospect.
+                            </p>
+                            
+                            <!-- Ambassador Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; color: #667eea; font-size: 18px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Prospect Details</h2>
+                                        
+                                        <table width="100%" cellpadding="8" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold; width: 40%;">Invited by Ambassador:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.invited_by_user.email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold; width: 40%;">Full Name:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.first_name }} {{ prospect.last_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Email:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.email }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Phone:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.phone }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Contact Name:</td>
+                                                <td style="color: #333333; font-size: 14px;"><strong style="color: #667eea;">{{ prospect.contact_name }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Restaurant/Organization name:</td>
+                                                <td style="color: #333333; font-size: 14px;"><strong style="color: #667eea;">{{ prospect.restaurant_organisation_name }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Registration Date:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.created_at }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Comments:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.comments }}</td>
+                                            </tr>
+                                            
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://savefryoil.com/ambassador-referrals/registered-prospects/" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
+                                            View Ambassador Dashboard
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 20px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                You can manage and view this Prospect in the dashboard.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 40px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                                This is an automated notification from your Ambassador Management System.<br>
+                                © 2025 Save Fry Oil. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
