@@ -157,7 +157,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "no-reply@savefryoil.com"
 EMAIL_HOST_PASSWORD = getenv("EMAIL_SEND_GRID_API_KEY")
-DEFAULT_FROM_EMAIL = "SaveFryOil App<no-reply@savefryoil.com>"
+DEFAULT_FROM_EMAIL = "SaveFryOil Ambassador<no-reply@savefryoil.com>"
 
 FRONTEND_URL = f"{getenv("SERVER_URL")}/users/auth"
 
