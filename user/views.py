@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
 from django.shortcuts import render
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -228,6 +229,16 @@ class ProfileView(APIView):
             return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StaffAmbassadorView(ListAPIView):
+    permission_classes = [IsStaffUser]
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = User.objects.filter(invited_by_user=user)
+        return queryset
 
 
 class QrCodeView(APIView):
