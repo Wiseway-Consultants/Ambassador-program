@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
 
+from notifications.utils import send_notification
 from prospect.permissions import IsStaffUser
 from utils.qr_code_tiger_api import qrTigerAPI
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
@@ -209,6 +210,7 @@ class ProfileView(APIView):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            send_notification(request.user.id, "You successfully updated your profile", "success")
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -225,6 +227,7 @@ class ProfileView(APIView):
 
             # Keep user logged in after password change
             update_session_auth_hash(request, user)
+            send_notification(request.user.id, "You successfully changed your password", "success")
 
             return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
 
@@ -254,6 +257,7 @@ class QrCodeView(APIView):
             qr_id = qrTigerAPI.create_qr_code_with_name(qr_url, qr_name)
             user.referral_qr_code_id = qr_id
             user.save()
+            send_notification(request.user.id, "Ambassador QR Code generated successfully", "success")
             return Response({"detail": "success"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
