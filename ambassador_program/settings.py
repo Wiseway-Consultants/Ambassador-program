@@ -59,7 +59,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'user',
     'prospect',
-    'commission'
+    'commission',
+    'notifications',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -92,6 +94,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ambassador_program.wsgi.application'
+ASGI_APPLICATION = "ambassador_program.asgi.application"
+
+# Redis channel layer
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(getenv("REDIS_HOST", "redis"), int(getenv("REDIS_PORT", 6379)))],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
