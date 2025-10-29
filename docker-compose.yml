@@ -18,16 +18,26 @@ services:
     container_name:
       ambassador_prod
     build: .
-    command: sh -c "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn ambassador_program.asgi:application -k uvicorn.workers.UvicornWorker --workers 4 --bind 0.0.0.0:8001"
-
+    command: ["bash", "/app/start_prod.sh"]
     ports:
       - "8001:8001"
     env_file:
       - .env
     depends_on:
+      redis:
+        condition: service_started
       db:
         condition: service_healthy
     restart: always
+    volumes:
+      - ./logs:/app/logs
+
+  redis:
+    image: redis:7
+    container_name: ambassador_redis
+    restart: always
+    ports:
+      - "6379:6379"
 
   refresher:
     container_name:
