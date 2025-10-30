@@ -24,6 +24,7 @@ from ambassador_program.views import openapi_yaml, GHLview, QRCodeView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('user.urls')),
+    path('notifications/', include('notifications.urls')),
     path('prospects/', include('prospect.urls')),
     path('commission/', include('commission.urls')),
     path('ghl/token/', GHLview.as_view(), name='ghl-token'),
