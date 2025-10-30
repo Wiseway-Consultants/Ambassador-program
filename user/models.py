@@ -7,6 +7,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
+from notifications.utils import send_notification
 from prospect.models import Prospect
 from utils.send_email import send_notification_email
 
@@ -18,6 +19,7 @@ class CustomUserManager(BaseUserManager):
     Custom user model manager where email is the unique identifiers
     for authentication instead of usernames.
     """
+
     def create_user(self, email, phone, password=None, referral_code=None, **extra_fields):
         if not email or not phone:
             raise ValueError(_('Email and Phone must be set'))
@@ -47,6 +49,11 @@ class CustomUserManager(BaseUserManager):
             user.invited_by_user = inviter_user
             # Send email notification to User who invited this ambassador
             send_notification_email(to_user=inviter_user, notification_object=user, notification_type="user")
+            send_notification(
+                inviter_user.id,
+                f"New Ambassador: {user.first_name} {user.last_name}\n"
+                f"register using you referral code",
+                "info")
 
         if password:
             user.set_password(password)
