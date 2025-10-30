@@ -48,7 +48,7 @@ services:
     build:
       context: .
       dockerfile: ./refresher_Dockerfile
-    command: python refresher.py
+    command: python schedule_tasks.py
     env_file:
       - .env
     depends_on:
