@@ -90,6 +90,7 @@ class User(AbstractUser):
     last_name = models.CharField(_('last name'), max_length=30)
     phone = models.CharField(_('phone number'), max_length=30, blank=True)
     currency = models.CharField(_('currency'), max_length=3)
+    organization_name = models.CharField(_('organization name'), max_length=128, blank=True, null=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_accepted_terms = models.BooleanField(default=False)

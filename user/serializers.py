@@ -26,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "currency",
+            "organization_name",
             "is_accepted_terms",
             "referral_code",
             "is_staff",
