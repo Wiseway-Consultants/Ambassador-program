@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
+from notifications.utils import send_notification
 from prospect.models import Prospect
 from prospect.permissions import IsStaffUser
 from prospect.serializers import ProspectSerializer
@@ -21,6 +22,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
 
 from utils.send_email import send_notification_email
+from utils.send_telegram_notification import send_telegram_notification
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ class ProspectView(APIView):
         or by another Prospect (if `invited_by_prospect_id` is provided).
         """
         user = request.user
+        logger.info(f"Received Request to create Prospect: {request.data}")
         serializer = ProspectSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
@@ -46,6 +49,7 @@ class ProspectView(APIView):
 
             # Prevent duplicates
             if Prospect.objects.filter(Q(email=email) | Q(phone=phone)).first():
+                logger.info(f"Prospect {email}/{phone} already exist")
                 return Response(
                     {"detail": "Prospect with this email or phone already exists."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -58,18 +62,22 @@ class ProspectView(APIView):
             inviter_user = user.invited_by_user
             logger.info(inviter_user)
             if inviter_user and inviter_user.is_staff:
+                logger.info(f"Notify Relationship manager about new Prospect")
 
+                send_notification(inviter_user.id, "Your ambassador registered a new prospect", "info")
                 send_notification_email(
                     to_user=inviter_user,
                     notification_object=prospect,
                     notification_type="prospect"
                 )
 
+            logger.info(f"New Prospect created successfully: {serializer.data}")
             return Response(
                 ProspectSerializer(prospect).data,
                 status=status.HTTP_201_CREATED,
             )
 
+        logger.error(f"Error creating Prospect: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -86,31 +94,42 @@ class StaffProspectViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):  # Overwrite POST method. Submit to GHL logic
         data = request.data
 
+        logger.info(f"Received request to submit prospect to GHL: {data}")
+
         ghl_contacts_id = []
         error_ghl_contacts = []
         ghl_opportunities_id = []
 
         try:
             for prospect in data["prospects"]:
+                prospect_email = prospect['email']
                 try:
 
                     # 1 Prepare GHL data
                     ghl_location_id = GHL_API.country_to_locationID[prospect["country"]]
                     contact_payload = prospect_prepare_payload.ghl_contact_create(prospect)
 
+                    logger.debug(f"Location ID: {ghl_location_id}")
+                    logger.debug(f"data for GHL contact{contact_payload}")
+
                     # 2 Create contact in GHL
                     contact = GHL_API.create_contact(contact_payload, ghl_location_id)
+                    logger.debug(f"GHL contact response: {contact}")
                     contact_id = contact.get("contact", {}).get("id")
 
                     if not contact_id:
-                        error_ghl_contacts.append(prospect["email"])
+                        logger.error(f"Could not create GHL contact for prospect: {prospect}")
+                        error_ghl_contacts.append(prospect_email)
                         continue
 
                     ghl_contacts_id.append(contact_id)
 
                     # 3 Create opportunity
                     opportunity_payload = prospect_prepare_payload.ghl_opportunity_create(prospect, contact_id)
+
+                    logger.debug(f"Opportunity payload: {opportunity_payload}")
                     opportunity = GHL_API.create_opportunity(opportunity_payload, location_id=ghl_location_id)
+                    logger.debug(f"Opportunity response: {opportunity}")
                     opportunity_id = opportunity.get("opportunity", {}).get("id")
 
                     ghl_opportunities_id.append(opportunity_id)
@@ -121,24 +140,30 @@ class StaffProspectViewSet(ModelViewSet):
                     db_prospect.ghl_opportunity_id = opportunity_id
                     db_prospect.ghl_location_id = ghl_location_id
                     db_prospect.save(update_fields=["ghl_contact_id", "ghl_opportunity_id", "ghl_location_id"])
+                    logger.info(f"Prospect {prospect_email} created successfully")
 
                 except Exception as e:
+                    logger.error(f"Error creating Prospect[{prospect_email}]: {e}")
                     error_ghl_contacts.append({"email": prospect["email"], "error": str(e)})
 
-            return Response(
-                {
+            response = {
                     "contacts_id": ghl_contacts_id,
                     "error_contacts": error_ghl_contacts,
                     "opportunities_id": ghl_opportunities_id,
-                }, status=status.HTTP_201_CREATED
+                }
+            logger.info(f"Successfully submit all prospects to GHL: {response}")
+            return Response(
+                response, status=status.HTTP_201_CREATED
             )
 
         except Exception as e:
-            return Response({
+            error_response = {
                 "error": str(e),
                 "successful_contacts": ghl_contacts_id,
                 "successful_opportunities": ghl_opportunities_id,
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }
+            logger.error(f"Error submitting prospects: {error_response}")
+            return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CompleteDealView(APIView):
@@ -155,10 +180,20 @@ class CompleteDealView(APIView):
             prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_opportunity_id=opportunity_id)
             prospect.deal_completed = True
             prospect.save(update_fields=["deal_completed"])
+
+            send_notification(
+                prospect.invited_by_user.id,
+                "Your invited prospect's deal is completed",
+                "info"
+            )
+
             return Response({"detail": "deal_completed"})
         except PermissionError as e:
+            logger.error(f"deal completed endpoint permission denied: {e}")
             return Response({"error": str(e)}, status=403)
         except Exception as e:
+            send_telegram_notification(f"Error in complete deal endpoint: {e}")
+            logger.error(f"deal completed endpoint error: {e}")
             return Response({"error": str(e)}, status=400)
 
 
@@ -168,14 +203,18 @@ class GhlWebhookView(APIView):
         # 1️⃣ Get raw body (byte-for-byte)
         raw_body = request.body  # important: don’t decode or parse yet
 
+        logger.info(f"GhlWebhook received body: {raw_body}")
+
         # 2️⃣ Extract signature from headers
         signature_b64 = request.headers.get("x-wh-signature")
         if not signature_b64:
+            logger.error("missing x-wh-signature")
             return Response({"error": "Missing signature"}, status=400)
 
         try:
             signature_bytes = base64.b64decode(signature_b64)
         except Exception:
+            logger.error("invalid signature format")
             return Response({"error": "Invalid signature format"}, status=400)
 
         # 3️⃣ Load GHL’s public key
@@ -208,7 +247,7 @@ class GhlWebhookView(APIView):
             verified = False
 
         if not verified:
-            logger.warning("❌ Invalid GHL webhook signature.")
+            logger.error("❌ Invalid GHL webhook signature.")
             return Response({"error": "Invalid signature"}, status=401)
 
         # 5️⃣ Parse JSON safely after verification
@@ -229,4 +268,5 @@ class GhlWebhookView(APIView):
             logger.info(f"Delete prospect's: {prospect.email} GHL opportunity and contact id")
 
         # 7️⃣ Always return 200 quickly so GHL doesn’t retry
+        logger.info("Success parse GHL webhook")
         return Response({"detail": "success"}, status=200)

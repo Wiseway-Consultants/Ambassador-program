@@ -15,6 +15,7 @@ from django.conf import settings
 from notifications.utils import send_notification
 from prospect.permissions import IsStaffUser
 from utils.qr_code_tiger_api import qrTigerAPI
+from utils.send_telegram_notification import send_telegram_notification
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
 from utils.send_email import send_email
 
@@ -34,6 +35,7 @@ class RegisterView(APIView):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             logger.error(f"serializer error {serializer.errors}")
+            send_telegram_notification(f"Error Ambassador Registration {serializer.errors}")
             return Response(
                 {"errors": serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST
@@ -63,9 +65,11 @@ class ConfirmEmailView(APIView):
     permission_classes = []  # allow public access
 
     def post(self, request, *args, **kwargs):
+        logger.info(f"Received Confirm Email request with payload: {request.data}")
         token = request.data.get("token")
         password = request.data.get("password")
         if not token or not password:
+            logger.error(f"Token and password missing in email confirmation request")
             return render(request, "email_verified.html", {"error": "Missing token or password."})
 
         try:
@@ -73,6 +77,7 @@ class ConfirmEmailView(APIView):
             user = User.objects.get(email=email)
 
             if user.is_active:  # Check if user already active
+                logger.error(f"Account is already active")
                 return Response({"detail": "Account already activated."}, status=200)
 
             user.set_password(password)
@@ -80,8 +85,10 @@ class ConfirmEmailView(APIView):
             user.save()
 
             is_password_set = user.has_usable_password()
+            logger.info(f"Password is successfully set")
             return render(request, "email_verified.html", {"password_set": is_password_set})
         except SignatureExpired:  # render resend button if token expired
+            logger.error(f"Signature Expired")
             return render(
                 request,
                 "email_verified.html",
@@ -92,6 +99,7 @@ class ConfirmEmailView(APIView):
                 },
             )
         except (BadSignature, User.DoesNotExist):
+            logger.error(f"Bad signature or user does not exist")
             return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
 
     def get(self, request, *args, **kwargs):
@@ -207,19 +215,24 @@ class ProfileView(APIView):
         return Response(serializer.data)
 
     def put(self, request):
+        logger.info(f"Received request to update user profile {request.user.email}, data: {request.data}")
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             send_notification(request.user.id, "You successfully updated your profile", "success")
+            logger.info(f"Profile updated successfully")
             return Response(serializer.data)
+        logger.error(f"Error, user was not updated: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request):
+        logger.info(f"Received request to change {request.user.email} password")
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
             user = request.user
 
             if not user.check_password(serializer.validated_data["old_password"]):
+                logger.error(f"Wrong old password input")
                 return Response({"old_password": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
 
             user.set_password(serializer.validated_data["new_password"])
@@ -229,8 +242,10 @@ class ProfileView(APIView):
             update_session_auth_hash(request, user)
             send_notification(request.user.id, "You successfully changed your password", "success")
 
+            logger.info("Password changed successfully")
             return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
 
+        logger.error(f"Password wasn't changed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -251,15 +266,18 @@ class QrCodeView(APIView):
         user = request.user
 
         try:
-
+            logger.info("Received request to generate ambassador referral QR code")
             qr_url = f"https://savefryoil.com/ambassador-referrals/?referral_code={user.referral_code}"
             qr_name = f"ambassador_{user.email}"
             qr_id = qrTigerAPI.create_qr_code_with_name(qr_url, qr_name)
             user.referral_qr_code_id = qr_id
             user.save()
             send_notification(request.user.id, "Ambassador QR Code generated successfully", "success")
+
+            logger.info(f"Ambassador QR Code generated successfully with qr id: {qr_id}")
             return Response({"detail": "success"}, status=status.HTTP_200_OK)
         except Exception as e:
+            logger.error(f"Error generating ambassador QR code: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):
@@ -280,8 +298,11 @@ class StaffQrCodeView(APIView):
 
         try:
             data = request.data
+            logger.info(f"Received request to generate Staff QR code Bundle {data}")
+
             code_bundle_type = data["code_bundle_type"]
             if code_bundle_type not in ["Industry", "Affinity", "B2B"]:
+                logger.error(f"Wrong code bundle type: {code_bundle_type}")
                 return Response({"error": "code_bundle_type is not valid."}, status=status.HTTP_400_BAD_REQUEST)
 
             qr_url = None
@@ -304,8 +325,10 @@ class StaffQrCodeView(APIView):
             bundle_dict[code_bundle_type] = qr_id
             user.qr_code_bundles = bundle_dict
             user.save()
+            logger.info("Successfully generated Staff QR code")
             return Response({"detail": "success"}, status=status.HTTP_200_OK)
         except Exception as e:
+            logger.error(f"Error generating Staff QR code: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request):

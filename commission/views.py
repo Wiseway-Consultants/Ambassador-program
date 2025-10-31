@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -8,9 +10,10 @@ from rest_framework.views import APIView
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
 from prospect.models import Prospect
-from prospect.permissions import IsStaffUser
 from prospect.utils import get_invitation_user_chain_from_prospect
 from prospect.validation import validate_prospect, ValidationError
+
+logger = logging.getLogger(__name__)
 
 
 class CommissionClaimView(APIView):
@@ -19,9 +22,11 @@ class CommissionClaimView(APIView):
     def post(self, request):
 
         data = request.data
+        logger.info(f"Received request to claim prospect for commission: {data}")
         request_user = request.user
 
         if not validate_prospect(data):  # Validate proper payload
+            logger.error("Not valid prospect payload")
             return Response({'error': 'Invalid prospect'}, status=status.HTTP_400_BAD_REQUEST)
 
         number_of_frylows = data.pop('number_of_frylows', 0)
@@ -38,6 +43,7 @@ class CommissionClaimView(APIView):
                 raise ValidationError("Prospect's deal is not completed or already claimed.")
 
         except ValidationError as e:
+            logger.error(f"Error to claim prospect for commission: {e}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
@@ -54,9 +60,12 @@ class CommissionClaimView(APIView):
                     commission_level += 1
                 prospect.claimed = True
                 prospect.save()
+
+                logger.info(f"Successfully claimed prospect for commission: {prospect}")
                 return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
 
             except Exception as e:
+                logger.error(f"Error to claim prospect for commission: {e}")
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -30,7 +30,6 @@ class CustomUserManager(BaseUserManager):
 
         prospect = Prospect.objects.filter(Q(email=email) | Q(phone=phone)).first()
         # CASE A: inviter from referral code
-        logger.info(f"Refferal Code {referral_code}")
         if referral_code:
             inviter_user = User.objects.filter(referral_code=referral_code).first()
             logger.info(f"User: {inviter_user} is referring to prospect")
@@ -59,6 +58,8 @@ class CustomUserManager(BaseUserManager):
             user.set_password(password)
         else:
             user.set_unusable_password()
+
+        logger.info(f"User created: {user}")
 
         user.save()
         if prospect:
