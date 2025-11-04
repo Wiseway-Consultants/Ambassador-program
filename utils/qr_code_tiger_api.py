@@ -23,7 +23,7 @@ class QRCodeTigerAPI:
             "qrName": "test",
             "qr": {
                 "backgroundColor": None,
-                "colorDark": "rgb(255,0,0)",
+                "colorDark": "rgb(128,0,128)",
                 "colorType": "SINGLE_COLOR",
                 "eye_outer": "eyeOuter2",
                 "eye_inner": "eyeInner1",
@@ -31,7 +31,7 @@ class QRCodeTigerAPI:
                 "qrData": "pattern0",
                 "transparentBkg": False,
                 "logo": "https://media.qrtiger.com/images/2025/09/logo-(1)_82.png",
-                "color01": "rgb(0,0,0)"
+                "color01": "rgb(128,0,128)"
             }
         }
         return data
