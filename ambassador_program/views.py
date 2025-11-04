@@ -1,3 +1,4 @@
+import logging
 from os import path
 
 from django.conf import settings
@@ -7,6 +8,8 @@ from rest_framework.views import APIView
 
 from utils.ghl_api import GHL_API
 from utils.qr_code_tiger_api import qrTigerAPI
+
+logger = logging.getLogger(__name__)
 
 
 def openapi_yaml(request):
@@ -40,6 +43,7 @@ class GHLview(APIView):
             return Response({"access_token": location_access_token}, status=200)
 
         except Exception as e:
+            logger.error(f"Error with GHL admin token: {e}")
             return Response(f"Error: {e}", status=400)
 
 
