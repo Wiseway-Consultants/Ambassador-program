@@ -6,4 +6,4 @@
 /staticfiles/admin/
 /staticfiles/rest_framework/
 /logs/
-/auth/ghl_jwt_auth.json
+/auth/*
