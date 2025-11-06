@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from os import getenv
 from pathlib import Path
 
@@ -71,7 +71,7 @@ class GoHighLevelAPI:
                     tokens["access_token"] = response.json()["access_token"]
                     tokens["expires_in"] = response.json()["expires_in"]
                     tokens["refresh_token"] = response.json()["refresh_token"]
-                    tokens["refreshed_at"] = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+                    tokens["refreshed_at"] = datetime.now().strftime('%Y-%m-%d %H:%M')
                     json.dump(tokens, file, indent=4)
                 logger.info("AUTH TOKEN REFRESHED SUCCESSFULLY ^_^")
             else:
@@ -81,23 +81,57 @@ class GoHighLevelAPI:
             logger.error('REFRESHER ERROR: ', ex)
 
     def get_location_access_token(self, location_id):
+        location_auth_path = Path(BASE_DIR, "auth", f"{location_id}_auth.json")
+        if not location_auth_path.exists():
+            location_auth_path.touch(exist_ok=True)
+            logger.info(f"Created auth token file for location {location_id}")
+
+        try:
+            with open(location_auth_path, "r") as f:
+                location_auth = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            location_auth = {}
+        if location_auth.get("access_token") and location_auth.get("refreshed_at") and location_auth.get("expires_in"):
+            refreshed_at = datetime.strptime(location_auth["refreshed_at"], "%Y-%m-%d %H:%M")  # 2000-11-06 15:35
+            token_expires_in_seconds = int(location_auth["expires_in"])  # 86400 = 24hours;
+            expires_at_datetime = refreshed_at + timedelta(seconds=token_expires_in_seconds)  # 2000-11-07 15:35
+
+            if datetime.now() < expires_at_datetime - timedelta(hours=4):  # add 4Hours buffer to prevent timezone error
+                logger.info(f"Using cached token for location {location_id}")
+                return location_auth["access_token"]
+
+        # Location token expired - refreshing
         with open(self.auth_file_path, "r") as file:
+            logger.info(f"Reading agency auth token for location {location_id}")
             tokens = json.load(file)
-        agency_access_token = tokens["access_token"]
-        response = requests.post(
-            url=f"{self.base_url}/oauth/locationToken",
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json",
-                "Version": "2021-07-28",
-                "Authorization": f"Bearer {agency_access_token}"
-            },
-            data={
-                "locationId": location_id,
-                "companyId": tokens["companyId"]
-            }
-        )
-        return response.json()["access_token"]
+            agency_access_token = tokens["access_token"]
+            response = requests.post(
+                url=f"{self.base_url}/oauth/locationToken",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Accept": "application/json",
+                    "Version": "2021-07-28",
+                    "Authorization": f"Bearer {agency_access_token}"
+                },
+                data={
+                    "locationId": location_id,
+                    "companyId": tokens["companyId"]
+                }
+            )
+            logger.info(f"Sent request to retrieve location token")
+            if response.status_code == 201:
+                data = response.json()
+                with open(location_auth_path, "w") as location_auth_file:
+                    location_auth_data = {
+                        "access_token": data["access_token"],
+                        "expires_in": data["expires_in"],
+                        "refreshed_at": datetime.now().strftime('%Y-%m-%d %H:%M')
+                    }
+                    json.dump(location_auth_data, location_auth_file, indent=4)
+                logger.info("Location TOKEN REFRESHED SUCCESSFULLY ^_^")
+            else:
+                logger.error(f"error [{response.status_code}]:\n {response.content}")
+            return data["access_token"]
 
     def create_contact(self, data, location_id):
         try:
