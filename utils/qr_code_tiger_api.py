@@ -23,7 +23,7 @@ class QRCodeTigerAPI:
             "qrName": "test",
             "qr": {
                 "backgroundColor": None,
-                "colorDark": "rgb(128,0,128)",
+                "colorDark": "rgb(255,0,0)",
                 "colorType": "SINGLE_COLOR",
                 "eye_outer": "eyeOuter2",
                 "eye_inner": "eyeInner1",
@@ -31,7 +31,7 @@ class QRCodeTigerAPI:
                 "qrData": "pattern0",
                 "transparentBkg": False,
                 "logo": "https://media.qrtiger.com/images/2025/09/logo-(1)_82.png",
-                "color01": "rgb(128,0,128)"
+                "color01": "rgb(255,0,0)"
             }
         }
         return data
@@ -44,10 +44,10 @@ class QRCodeTigerAPI:
             "qrUrl": qr_url,
             "qrName": "test",
             "qr": {
-                "color01": "rgb(250,190,20)",
+                "color01": "rgb(128,0,128)",
                 "logo": "https://media.qrtiger.com/images/2025/09/logo-(1)_82.png",
                 "backgroundColor": "rgb(255,255,255)",
-                "colorDark": "rgb(250,190,20)",
+                "colorDark": "rgb(128,0,128)",
                 "colorType": "SINGLE_COLOR",
                 "grdType": "linear",
                 "gradientType": "linear",
