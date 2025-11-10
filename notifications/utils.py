@@ -33,6 +33,7 @@ def send_push_notification(push_token, title, message, data=None):
 
 def push_notify_user(user_id, title, message):
     tokens = PushNotificationDeviceToken.objects.filter(user_id=user_id).values_list('push_token', flat=True)
+    logger.info(f"User {user_id} push notification tokens: {len(tokens)}")
     for token in tokens:
         send_push_notification(token, title, message)
 
@@ -45,6 +46,7 @@ def send_notification(user_id, message, notification_type, notification_title):
             title=notification_title,
             notification_type=notification_type
         )
+        logger.info("Notification created in DB")
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f"user_{user_id}",

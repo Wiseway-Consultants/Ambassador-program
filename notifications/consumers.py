@@ -47,3 +47,4 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             "title": event["title"],
             "notification_type": event["notification_type"],
         })
+        print("Notification sent to websocket")
