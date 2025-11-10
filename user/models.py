@@ -52,7 +52,9 @@ class CustomUserManager(BaseUserManager):
                 inviter_user.id,
                 f"New Ambassador: {user.first_name} {user.last_name}\n"
                 f"register using you referral code",
-                "info")
+                "info",
+                "Your new Ambassador",
+            )
 
         if password:
             user.set_password(password)

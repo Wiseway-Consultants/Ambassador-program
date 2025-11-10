@@ -219,7 +219,12 @@ class ProfileView(APIView):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            send_notification(request.user.id, "You successfully updated your profile", "success")
+            send_notification(
+                request.user.id,
+                "You successfully updated your profile",
+                "success",
+                "Profile Updated"
+            )
             logger.info(f"Profile updated successfully")
             return Response(serializer.data)
         logger.error(f"Error, user was not updated: {serializer.errors}")
@@ -240,7 +245,12 @@ class ProfileView(APIView):
 
             # Keep user logged in after password change
             update_session_auth_hash(request, user)
-            send_notification(request.user.id, "You successfully changed your password", "success")
+            send_notification(
+                request.user.id,
+                "You successfully changed your password",
+                "success",
+                "Password Changed"
+            )
 
             logger.info("Password changed successfully")
             return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
@@ -272,7 +282,12 @@ class QrCodeView(APIView):
             qr_id = qrTigerAPI.create_qr_code_with_name(qr_url, qr_name)
             user.referral_qr_code_id = qr_id
             user.save()
-            send_notification(request.user.id, "Ambassador QR Code generated successfully", "success")
+            send_notification(
+                request.user.id,
+                "Ambassador QR Code generated successfully",
+                "success",
+                "QR Code Generated"
+            )
 
             logger.info(f"Ambassador QR Code generated successfully with qr id: {qr_id}")
             return Response({"detail": "success"}, status=status.HTTP_200_OK)

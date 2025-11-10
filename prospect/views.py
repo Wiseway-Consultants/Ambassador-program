@@ -64,7 +64,12 @@ class ProspectView(APIView):
             if inviter_user and inviter_user.is_staff:
                 logger.info(f"Notify Relationship manager about new Prospect")
 
-                send_notification(inviter_user.id, "Your ambassador registered a new prospect", "info")
+                send_notification(
+                    inviter_user.id,
+                    "Your ambassador registered a new prospect",
+                    "info",
+                    "New Referral Ambassador"
+                )
                 send_notification_email(
                     to_user=inviter_user,
                     notification_object=prospect,
@@ -184,7 +189,8 @@ class CompleteDealView(APIView):
             send_notification(
                 prospect.invited_by_user.id,
                 "Your invited prospect's deal is completed",
-                "info"
+                "info",
+                "Prospect's Deal Completed"
             )
 
             return Response({"detail": "deal_completed"})
