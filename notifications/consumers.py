@@ -44,5 +44,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             "type": "notification",
             "message": event["message"],
+            "title": event["title"],
             "notification_type": event["notification_type"],
         })
