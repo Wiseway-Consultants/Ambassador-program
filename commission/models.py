@@ -20,7 +20,7 @@ class Commission(models.Model):
         blank=False
     )
     commission_tree_level = models.PositiveSmallIntegerField()
-    number_of_frylows = models.IntegerField(default=0)
-    # money_amount = models.FloatField(default=0)
-    # currency = models.CharField(max_length=10, blank=True, null=True)
+    number_of_frylows = models.PositiveIntegerField()
+    money_amount = models.FloatField(default=0)
+    currency = models.CharField(max_length=10, blank=True, null=True)
 

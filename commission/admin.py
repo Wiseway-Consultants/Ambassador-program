@@ -10,6 +10,7 @@ class CommissionAdmin(admin.ModelAdmin):
         "user",
         "commission_tree_level",
         "number_of_frylows",
+        "money_amount",
         "created_at",
         "updated_at"
     )
