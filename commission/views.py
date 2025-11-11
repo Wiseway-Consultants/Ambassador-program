@@ -10,10 +10,14 @@ from rest_framework.views import APIView
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
 from prospect.models import Prospect
-from prospect.utils import get_invitation_user_chain_from_prospect
+from prospect.utils import get_invitation_user_chain_from_prospect, get_currency_by_country_code
 from prospect.validation import validate_prospect, ValidationError
 
 logger = logging.getLogger(__name__)
+
+DIRECT_SALE_AMOUNT = 50
+TOTAL_TEAM_REWARD_AMOUNT = 75
+PERCENTAGE_COMMISSION_LEVELS = ["DIRECT SALE", 30, 20, 15, 12, 10, 8, 5]
 
 
 class CommissionClaimView(APIView):
@@ -25,9 +29,10 @@ class CommissionClaimView(APIView):
         logger.info(f"Received request to claim prospect for commission: {data}")
         request_user = request.user
 
-        if not validate_prospect(data):  # Validate proper payload
-            logger.error("Not valid prospect payload")
-            return Response({'error': 'Invalid prospect'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            validate_prospect(data)  # Validate proper payload
+        except (ValueError, TypeError) as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         number_of_frylows = data.pop('number_of_frylows', 0)
 
@@ -48,14 +53,23 @@ class CommissionClaimView(APIView):
 
         with transaction.atomic():
             try:
+                currency = get_currency_by_country_code(prospect.country)
                 users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
                 commission_level = 0
                 for user in users_invitation_chain:
+                    if commission_level == 0:  # Direct Sale
+                        money_amount = DIRECT_SALE_AMOUNT * number_of_frylows
+                    else:
+                        pool_percentage = PERCENTAGE_COMMISSION_LEVELS[commission_level] / 100
+                        money_amount = (TOTAL_TEAM_REWARD_AMOUNT * pool_percentage) * number_of_frylows
+                    logger.info(f"Commission amount for user's id {user.id}: {currency}{money_amount}")
                     Commission.objects.create(
                         prospect=prospect,
                         number_of_frylows=number_of_frylows,
                         user=user,
                         commission_tree_level=commission_level,
+                        money_amount=money_amount,
+                        currency=currency
                     )
                     commission_level += 1
                 prospect.claimed = True
