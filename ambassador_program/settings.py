@@ -46,6 +46,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://ambassador.savefryoil.com",
 ]
 
+STRIPE_SECRET_KEY = getenv("STRIPE_SECRET_KEY")
+STRIPE_PUBLIC_KEY = getenv("STRIPE_PUBLIC_KEY")
+
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
