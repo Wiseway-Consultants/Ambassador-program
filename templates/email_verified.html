@@ -112,24 +112,35 @@
 </div>
 
 <script>
-    const form = document.getElementById("password-form");
+    const APP_SCHEME = "sfoambassador://confirm-email?token={{ token }}";
+    const FALLBACK_URL = "https://savefryoil.com/ambassador-referrals/login";
+
+    function attemptAppRedirect() {
+        const start = Date.now();
+        let hasFocus = true;
+
+        window.addEventListener('blur', () => { hasFocus = false; });
+
+        window.location = APP_SCHEME;
+
+        setTimeout(() => {
+            if (hasFocus && Date.now() - start < 2500) {
+                console.log("App not detected, staying in browser");
+            }
+        }, 2000);
+    }
+
+    const form = document.querySelector("form");
     if (form) {
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const password = document.getElementById("password").value;
-            const confirm = document.getElementById("confirm_password").value;
-            const token = document.getElementById("token").value;
+            const token = document.querySelector('input[name="token"]').value;
             const msg = document.getElementById("message");
 
-            if (password !== confirm) {
-                msg.textContent = "❌ Passwords do not match";
-                msg.style.color = "red";
-                return;
-            }
-
             try {
-                const response = await fetch("http://localhost:8001/users/auth/confirm-email/", {
+                const response = await fetch("/users/auth/confirm-email/", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -142,9 +153,10 @@
                 if (response.ok) {
                     msg.textContent = "✅ Password successfully set. Redirecting...";
                     msg.style.color = "green";
+
                     setTimeout(() => {
-                        window.location.href = "https://savefryoil.com/ambassador-referrals/login";
-                    }, 2000);
+                        attemptAppRedirect();
+                    }, 1500);
                 } else {
                     msg.textContent = "❌ " + (data.detail || "Something went wrong");
                     msg.style.color = "red";
@@ -155,6 +167,10 @@
             }
         });
     }
+
+    {% if password_set %}
+        attemptAppRedirect();
+    {% endif %}
 </script>
 </body>
-</html>
+</html>            
