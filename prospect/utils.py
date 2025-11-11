@@ -48,6 +48,20 @@ def get_country_code_by_currency(currency: str) -> str:
     return currency_to_country[currency]
 
 
+def get_currency_by_country_code(country_code: str) -> str:
+    country_code = country_code.upper()
+    country_to_currency = {
+        "GB": "GBP",
+        "UK": "GBP",
+        "US": "USD",
+        "IE": "EUR",
+        "CA": "CAD",
+        "AU": "AUD",
+        "NZ": "NZD",
+    }
+    return country_to_currency.get(country_code, "")
+
+
 def get_invitation_user_chain_from_prospect(prospect):
     """
     Returns a list of user IDs in the invitation chain for a given prospect.
