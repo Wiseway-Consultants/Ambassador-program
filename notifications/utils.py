@@ -1,5 +1,4 @@
 import logging
-from os import getenv
 
 import requests
 from channels.layers import get_channel_layer
