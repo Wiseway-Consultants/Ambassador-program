@@ -6,7 +6,7 @@ from notifications.models import Notification, PushNotificationDeviceToken
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
-        fields = ["id", "message", "created_at", "notification_type", "read"]
+        fields = ["id", "message", "created_at", "title", "notification_type", "read"]
 
 
 class PushNotificationDeviceTokenSerializer(serializers.ModelSerializer):
