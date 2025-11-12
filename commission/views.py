@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
+from commission.utlis import create_stripe_express_account
 from prospect.models import Prospect
 from prospect.utils import get_invitation_user_chain_from_prospect, get_currency_by_country_code
 from prospect.validation import validate_prospect, ValidationError
@@ -51,18 +52,19 @@ class CommissionClaimView(APIView):
             logger.error(f"Error to claim prospect for commission: {e}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        with transaction.atomic():
-            try:
-                currency = get_currency_by_country_code(prospect.country)
-                users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
-                commission_level = 0
-                for user in users_invitation_chain:
+        try:
+            currency = get_currency_by_country_code(prospect.country)
+            users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
+            commission_level = 0
+            for user in users_invitation_chain:
+                with transaction.atomic():
+
                     if commission_level == 0:  # Direct Sale
                         money_amount = DIRECT_SALE_AMOUNT * number_of_frylows
                     else:
                         pool_percentage = PERCENTAGE_COMMISSION_LEVELS[commission_level] / 100
                         money_amount = (TOTAL_TEAM_REWARD_AMOUNT * pool_percentage) * number_of_frylows
-                    logger.info(f"Commission amount for user's id {user.id}: {currency}{money_amount}")
+                    logger.info(f"Commission amount for user's id {user.id}: {currency} {money_amount}")
                     Commission.objects.create(
                         prospect=prospect,
                         number_of_frylows=number_of_frylows,
@@ -72,15 +74,22 @@ class CommissionClaimView(APIView):
                         currency=currency
                     )
                     commission_level += 1
-                prospect.claimed = True
-                prospect.save()
+                    prospect.claimed = True
+                    prospect.save()
+
+                    if not user.stripe_account_id:
+                        stripe_account_id = create_stripe_express_account(user)
+                        logger.info(f"Stripe account for user {user.id} created: {stripe_account_id}")
+                    else:
+                        stripe_account_id = user.stripe_account_id
+                        logger.info(f"Stripe account for user {user.id} already exists: {stripe_account_id}")
 
                 logger.info(f"Successfully claimed prospect for commission: {prospect}")
-                return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
+            return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
 
-            except Exception as e:
-                logger.error(f"Error to claim prospect for commission: {e}")
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error to claim prospect for commission: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommissionListView(ListAPIView):
