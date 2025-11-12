@@ -2,7 +2,7 @@ import logging
 
 from django.conf import settings
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -32,6 +32,10 @@ class StripeProfileView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             account = stripe.Account.retrieve(user_stripe_acc_id)
+            if user.stripe_onboard_status is False and account.details_submitted is False:
+                user.set_stripe_onboard_status = True
+                user.save()
+                logger.info(f"Stripe account {user_stripe_acc_id} is onboard")
             logger.debug(f"Stripe Account retrieved: {account}")
             return Response(account)
         except Exception as e:
@@ -54,6 +58,37 @@ class StripeProfileView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class StripePayoutsView(APIView):
+
+    permission_classes = (IsAdminUser, )
+
+    def get(self, request):
+        pass
+
+
+class StripeAccountView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        try:
+            user = request.user
+            logger.info(f"Request to create login link to stripe account: {user.email}")
+            user_stripe_acc_id = user.stripe_account_id
+            if not user_stripe_acc_id:
+                logger.error(f"User doesn't have stripe account")
+                return Response(
+                    {
+                        "error": "You doesn't have Express Stripe account"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            login_link = stripe.Account.create_login_link(user_stripe_acc_id)
+            return Response({"login_url": login_link.url}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error creating stripe account login link: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class StripeOnboardingView(APIView):
 
     permission_classes = (IsAuthenticated,)
@@ -66,8 +101,8 @@ class StripeOnboardingView(APIView):
 
         account_link = stripe.AccountLink.create(
             account=user_stripe_acc_id,  # The Express account ID
-            refresh_url="https://savefryoil.com/ambassador-referrals/profile/",  # If user abandons onboarding
-            return_url="https://savefryoil.com/ambassador-referrals/profile/",  # After onboarding completes
+            refresh_url="https://savefryoil.com/ambassador-referrals/stripe-profile/",  # If user abandons onboarding
+            return_url="https://savefryoil.com/ambassador-referrals/stripe-profile/",  # After onboarding completes
             type="account_onboarding"
         )
         send_email(
