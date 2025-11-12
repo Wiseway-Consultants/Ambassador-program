@@ -35,6 +35,16 @@ def send_email(user, url, email_type: str = "confirm"):
                 "current_year": datetime.now().year,
             }
         )
+
+    if email_type == 'stripe_onboarding':
+        subject = "Complete your Stripe onboarding"
+        html_content = render_to_string(
+            "emails/stripe_onboarding.html",
+            {
+                "user": user,
+                "onboarding_url": url,
+            }
+        )
     # Build email
     email = EmailMessage(subject, html_content, from_email, to)
     email.content_subtype = "html"  # Important → tells Django it's HTML

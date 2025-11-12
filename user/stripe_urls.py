@@ -1,7 +1,8 @@
 from django.urls import path
 
-from user.stripe_profile_views import StripeProfileView
+from user.stripe_profile_views import StripeProfileView, StripeOnboardingView
 
 urlpatterns = [
-    path('', StripeProfileView.as_view(), name='stripe-profile'),
+    path('profile/', StripeProfileView.as_view(), name='stripe-profile'),
+    path('onboarding/send/', StripeOnboardingView.as_view(), name='stripe-onboarding'),
 ]
