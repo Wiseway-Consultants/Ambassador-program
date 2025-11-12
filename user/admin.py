@@ -22,7 +22,9 @@ class EmailUserAdmin(UserAdmin):
             'referral_qr_code_id',
             'invited_by_user',
             'is_prospect',
-            'qr_code_bundles'
+            'qr_code_bundles',
+            'stripe_account_id',
+            'stripe_onboard_status'
         )}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
