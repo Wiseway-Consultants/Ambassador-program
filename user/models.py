@@ -96,6 +96,7 @@ class User(AbstractUser):
         related_name="invited_users"
     )
 
+    email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(_('first name'), max_length=30)
     last_name = models.CharField(_('last name'), max_length=30)
     phone = models.CharField(_('phone number'), max_length=30, blank=True)
@@ -108,7 +109,9 @@ class User(AbstractUser):
     referral_code = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)  # Will be used for unique QRcode
     referral_qr_code_id = models.CharField(max_length=10, blank=True)
     qr_code_bundles = models.JSONField(default=dict, blank=True, null=False)
-    email = models.EmailField(_('email address'), unique=True)
+
+    stripe_account_id = models.CharField(max_length=128, blank=True, null=True)
+    stripe_onboard_status = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
