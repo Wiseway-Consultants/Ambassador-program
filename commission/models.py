@@ -23,4 +23,6 @@ class Commission(models.Model):
     number_of_frylows = models.PositiveIntegerField()
     money_amount = models.FloatField(default=0)
     currency = models.CharField(max_length=10, blank=True, null=True)
+    paid = models.BooleanField(default=False)
+    stripe_transfer_id = models.CharField(max_length=128, blank=True, null=True)
 
