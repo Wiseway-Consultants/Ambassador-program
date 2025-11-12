@@ -27,6 +27,7 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('prospects/', include('prospect.urls')),
     path('commission/', include('commission.urls')),
+    path('stripe/profile/', include('user.stripe_urls')),
     path('ghl/token/', GHLview.as_view(), name='ghl-token'),
     path('api/schema.yaml', openapi_yaml, name='custom-schema'),
     path(
