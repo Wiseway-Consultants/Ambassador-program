@@ -52,6 +52,30 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
+class AdminUserSerializer(serializers.ModelSerializer):
+    is_invited_by_rm = serializers.BooleanField(read_only=True)
+    invited_by_user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "phone",
+            "currency",
+            "invited_by_user",
+            "organization_name",
+            "referral_code",
+            "is_staff",
+            "is_superuser",
+            "is_invited_by_rm"
+        )
+
+        read_only_fields = ("id", "is_staff", "is_superuser")
+
+
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True, validators=[validate_password])
