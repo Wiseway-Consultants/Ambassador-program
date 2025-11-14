@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
+from django.db.models import Value, BooleanField, F
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -13,10 +14,10 @@ from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
 
 from notifications.utils import send_notification
-from prospect.permissions import IsStaffUser
+from prospect.permissions import IsStaffUser, IsSuperUser
 from utils.qr_code_tiger_api import qrTigerAPI
 from utils.send_telegram_notification import send_telegram_notification
-from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer
+from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer, AdminUserSerializer
 from utils.send_email import send_email
 
 User = get_user_model()
@@ -267,6 +268,20 @@ class StaffAmbassadorView(ListAPIView):
         user = self.request.user
         queryset = User.objects.filter(invited_by_user=user)
         return queryset
+
+
+class AdminAmbassadorView(ListAPIView):
+    permission_classes = [IsSuperUser]
+    serializer_class = AdminUserSerializer
+
+    def get_queryset(self):
+        return (
+            User.objects
+            .all()
+            .annotate(
+                is_invited_by_rm=F("invited_by_user__is_staff")
+            )
+        )
 
 
 class QrCodeView(APIView):
