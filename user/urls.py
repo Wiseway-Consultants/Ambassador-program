@@ -10,7 +10,7 @@ from .views import (EmailTokenObtainPairView,
                     ResetPasswordView,
                     QrCodeView,
                     StaffQrCodeView,
-                    StaffAmbassadorView
+                    StaffAmbassadorView, AdminAmbassadorView
                     )
 
 urlpatterns = [
@@ -22,6 +22,7 @@ urlpatterns = [
     path('token/obtain/', EmailTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('ambassadors/', StaffAmbassadorView.as_view(), name='ambassadors'),
+    path('ambassadors/admin/', AdminAmbassadorView.as_view(), name='ambassadors-admin'),
     path("profile/", ProfileView.as_view(), name="profile"),
     path("profile/qr_codes/", QrCodeView.as_view(), name="qr-codes"),
     path("profile/qr_codes/bundle/", StaffQrCodeView.as_view(), name="bundle-qr-codes"),
