@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +12,7 @@ import stripe
 from commission.models import Commission
 from commission.serializers import CommissionStripePayoutSerializer
 from commission.utlis import create_stripe_express_account, create_stripe_transfer, retrieve_recipient_stripe, \
-    create_bank_account_link
+    create_bank_account_link, create_stripe_transfer_from_commission
 from prospect.permissions import IsSuperUser
 from utils.send_email import send_email
 
@@ -75,21 +76,28 @@ class StripeOnboardingEmailView(APIView):
 
 class StripePayoutsView(APIView):
 
-    permission_classes = (IsSuperUser, )
+    permission_classes = (IsAuthenticated, )
 
     def post(self, request):
 
         data = request.data
+        request_user = request.user
         serializer = CommissionStripePayoutSerializer(data=data)
         if not serializer.is_valid():
             return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         commission_id = serializer.validated_data["id"]
 
         try:
-            commissions = Commission.objects.get(id=commission_id)
-            user = commissions.user
-            transfer = create_stripe_transfer(user, commissions)
-            return Response({"data": transfer})
+            commission = Commission.objects.get(id=commission_id)
+            commission_user = commission.user
+            if commission_user != request_user:
+                raise PermissionDenied("You can't submit payouts for this commission")
+
+            transfer = create_stripe_transfer_from_commission(commission_user, commission)
+            commission.stripe_transfer_id = transfer["id"]
+            commission.paid = True
+            commission.save()
+            return Response({"transfer": transfer})
         except Exception as e:
             logger.error(f"Error creating stripe payout: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
