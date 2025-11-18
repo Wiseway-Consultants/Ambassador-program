@@ -26,3 +26,12 @@ class Commission(models.Model):
     paid = models.BooleanField(default=False)
     stripe_transfer_id = models.CharField(max_length=128, blank=True, null=True)
 
+    admin_approve = models.BooleanField(default=False)
+    approved_by_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="approved_commissions",
+        null=True,
+        blank=True
+    )
+
