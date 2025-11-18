@@ -11,6 +11,8 @@ class CommissionAdmin(admin.ModelAdmin):
         "commission_tree_level",
         "number_of_frylows",
         "money_amount",
+        "admin_approve",
+        "approved_by_user",
         "created_at",
         "updated_at"
     )
