@@ -134,28 +134,3 @@ class StripeRecipientView(APIView):
         except Exception as e:
             logger.error(f"Error to create stripe_recipient for commission: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class StripeOnboardingEmailView(APIView):
-
-    permission_classes = [IsAuthenticated, ]
-
-    def post(self, request):
-        user = request.user
-
-        recipient_account_id = user.stripe_account_id
-        if not recipient_account_id:
-            return Response({"error": "Stripe recipient account not found"}, status=status.HTTP_200_OK)
-        if user.stripe_onboard_status:
-            return Response({"error": "You already onboarded"}, status=status.HTTP_200_OK)
-        try:
-
-            account_link = create_bank_account_link(recipient_account_id)
-            logger.info(f"User: {user.id} Stripe recipient account link: {account_link}")
-            send_email(user=user, url=account_link, email_type="stripe_onboarding")
-            logger.info("Stripe recipient email sent")
-
-            return Response({"detail": "Email sent successfully"}, status=status.HTTP_200_OK)
-        except Exception as e:
-            logger.error(f"Error to send email: {e}")
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

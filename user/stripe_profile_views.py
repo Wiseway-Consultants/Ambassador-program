@@ -10,8 +10,10 @@ import stripe
 
 from commission.models import Commission
 from commission.serializers import CommissionStripePayoutSerializer
-from commission.utlis import create_stripe_express_account, create_stripe_transfer, retrieve_recipient_stripe
+from commission.utlis import create_stripe_express_account, create_stripe_transfer, retrieve_recipient_stripe, \
+    create_bank_account_link
 from prospect.permissions import IsSuperUser
+from utils.send_email import send_email
 
 logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -43,6 +45,31 @@ class StripeProfileView(APIView):
             return Response(account)
         except Exception as e:
             logger.error(f"Error getting stripe_profile: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StripeOnboardingEmailView(APIView):
+
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request):
+        user = request.user
+
+        recipient_account_id = user.stripe_account_id
+        if not recipient_account_id:
+            return Response({"error": "Stripe recipient account not found"}, status=status.HTTP_200_OK)
+        if user.stripe_onboard_status:
+            return Response({"error": "You already onboarded"}, status=status.HTTP_200_OK)
+        try:
+
+            account_link = create_bank_account_link(recipient_account_id)
+            logger.info(f"User: {user.id} Stripe recipient account link: {account_link}")
+            send_email(user=user, url=account_link, email_type="stripe_onboarding")
+            logger.info("Stripe recipient email sent")
+
+            return Response({"detail": "Email sent successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error to send email: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
