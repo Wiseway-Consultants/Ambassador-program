@@ -117,20 +117,27 @@ class StripeRecipientView(APIView):
                 return Response({"error": "Commission already paid"}, status=status.HTTP_400_BAD_REQUEST)
             commission_recipient = commission.user
             stripe_recipient_id = commission_recipient.stripe_account_id
-            if not stripe_recipient_id:
 
-                logger.info("Stripe recipient id not found, creating")
-                stripe_recipient_id = create_stripe_recipient(commission_recipient)
-                commission_recipient.stripe_account_id = stripe_recipient_id
-                commission_recipient.save()
-                logger.info(f"Stripe recipient account added to User: {commission_recipient.id}")
+            with transaction.atomic():
+                if not stripe_recipient_id:
 
-            if not commission_recipient.stripe_onboard_status:
-                account_link = create_bank_account_link(stripe_recipient_id)
-                send_email(user=commission_recipient, url=account_link, email_type="stripe_onboarding")
-                logger.info("Stripe recipient email sent")
+                    logger.info("Stripe recipient id not found, creating")
+                    stripe_recipient_id = create_stripe_recipient(commission_recipient)
+                    commission_recipient.stripe_account_id = stripe_recipient_id
+                    commission_recipient.save()
+                    logger.info(f"Stripe recipient account added to User: {commission_recipient.id}")
 
-            return Response({"detail": "Success, Ambassador receives an onboarding email"}, status=status.HTTP_200_OK)
+                if not commission_recipient.stripe_onboard_status:
+                    account_link = create_bank_account_link(stripe_recipient_id)
+                    send_email(user=commission_recipient, url=account_link, email_type="stripe_onboarding")
+                    logger.info("Stripe recipient email sent")
+
+                commission.admin_approve = True
+                commission.approved_by_user = request.user
+                commission.save()
+                return Response(
+                    {"detail": "Success, Ambassador receives an onboarding email"}, status=status.HTTP_200_OK
+                )
         except Exception as e:
             logger.error(f"Error to create stripe_recipient for commission: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
