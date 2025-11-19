@@ -11,9 +11,12 @@ import stripe
 
 from commission.models import Commission
 from commission.serializers import CommissionStripePayoutSerializer
-from commission.utlis import create_stripe_express_account, create_stripe_transfer, retrieve_recipient_stripe, \
-    create_bank_account_link, create_stripe_transfer_from_commission
-from prospect.permissions import IsSuperUser
+from commission.utlis import (
+    retrieve_recipient_stripe,
+    create_bank_account_link,
+    create_stripe_transfer_from_commission,
+    create_stripe_recipient
+)
 from utils.send_email import send_email
 
 logger = logging.getLogger(__name__)
@@ -48,6 +51,22 @@ class StripeProfileView(APIView):
             logger.error(f"Error getting stripe_profile: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def post(self, request):
+        user = request.user
+        logger.info(f"Receive request to create Stripe recipient account for user: {user.id}")
+
+        user_stripe_recipient_id = user.stripe_account_id
+
+        if not user_stripe_recipient_id:
+            logger.info("Stripe recipient id not found, creating")
+            stripe_recipient_id = create_stripe_recipient(user)
+            user.stripe_account_id = stripe_recipient_id
+            user.save()
+            logger.info(f"Stripe recipient account added to User: {user.id}")
+
+        logger.info("Successfully create Stripe recipient account")
+        return Response({"detail": "Successfully create Stripe recipient account"}, status=status.HTTP_200_OK)
+
 
 class StripeOnboardingEmailView(APIView):
 
@@ -58,9 +77,9 @@ class StripeOnboardingEmailView(APIView):
 
         recipient_account_id = user.stripe_account_id
         if not recipient_account_id:
-            return Response({"error": "Stripe recipient account not found"}, status=status.HTTP_200_OK)
+            return Response({"error": "Stripe recipient account not found"}, status=status.HTTP_400_BAD_REQUEST)
         if user.stripe_onboard_status:
-            return Response({"error": "You already onboarded"}, status=status.HTTP_200_OK)
+            return Response({"error": "You already onboarded"}, status=status.HTTP_400_BAD_REQUEST)
         try:
 
             account_link = create_bank_account_link(recipient_account_id)
