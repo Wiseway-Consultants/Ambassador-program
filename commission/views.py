@@ -1,5 +1,6 @@
 import logging
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import status
 from rest_framework.generics import ListAPIView
@@ -9,12 +10,12 @@ from rest_framework.views import APIView
 
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
-from commission.utlis import create_stripe_express_account, create_stripe_recipient, create_bank_account_link
+from commission.utlis import create_stripe_recipient
+from notifications.utils import send_notification_to_multiple_users
 from prospect.models import Prospect
 from prospect.permissions import IsSuperUser
 from prospect.utils import get_invitation_user_chain_from_prospect, get_currency_by_country_code
 from prospect.validation import validate_prospect, ValidationError
-from utils.send_email import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -79,14 +80,15 @@ class CommissionClaimView(APIView):
                     prospect.claimed = True
                     prospect.save()
 
-                    if not user.stripe_account_id:
-                        stripe_account_id = create_stripe_express_account(user)
-                        logger.info(f"Stripe account for user {user.id} created: {stripe_account_id}")
-                    else:
-                        stripe_account_id = user.stripe_account_id
-                        logger.info(f"Stripe account for user {user.id} already exists: {stripe_account_id}")
-
                 logger.info(f"Successfully claimed prospect for commission: {prospect}")
+
+            admin_users = get_user_model().objects.filter(is_superuser=True)
+            send_notification_to_multiple_users(
+                admin_users,
+                f"Prospect has been submitted, please review the commission and approve it.",
+                "info",
+                "Prospect claimed"
+            )
             return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -137,16 +139,11 @@ class StripeRecipientView(APIView):
                     commission_recipient.save()
                     logger.info(f"Stripe recipient account added to User: {commission_recipient.id}")
 
-                if not commission_recipient.stripe_onboard_status:
-                    account_link = create_bank_account_link(stripe_recipient_id)
-                    send_email(user=commission_recipient, url=account_link, email_type="stripe_onboarding")
-                    logger.info("Stripe recipient email sent")
-
                 commission.admin_approve = True
                 commission.approved_by_user = request.user
                 commission.save()
                 return Response(
-                    {"detail": "Success, Ambassador receives an onboarding email"}, status=status.HTTP_200_OK
+                    {"detail": "Success"}, status=status.HTTP_200_OK
                 )
         except Exception as e:
             logger.error(f"Error to create stripe_recipient for commission: {e}")
