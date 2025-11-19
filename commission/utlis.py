@@ -150,7 +150,7 @@ def create_stripe_transfer_from_commission(user: User, commission: Commission):
             "value": amount,
             "currency": user.currency
         },
-        "description": "Ambassador Payouts"
+        "description": f"Ambassador Payouts for commission {commission.id}",
     }
 
     response = requests.post(

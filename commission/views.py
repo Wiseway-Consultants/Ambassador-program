@@ -106,6 +106,16 @@ class CommissionListView(ListAPIView):
         return Commission.objects.filter(user=user)
 
 
+class CommissionPaidView(ListAPIView):
+    permission_classes = [IsAuthenticated,]
+    serializer_class = CommissionListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+
+        return Commission.objects.filter(user=user, paid=True)
+
+
 class StripeRecipientView(APIView):
     permission_classes = [IsSuperUser, ]
 
