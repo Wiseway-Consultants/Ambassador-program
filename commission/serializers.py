@@ -19,9 +19,19 @@ class CommissionListSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "paid",
-            "stripe_transfer_id"
+            "stripe_transfer_id",
+            "admin_approve",
+            "approved_by_user"
         ]
-        read_only_fields = ["created_at", "updated_at", "paid", "stripe_transfer_id", "money_amount", "currency"]
+        read_only_fields = [
+            "created_at",
+            "updated_at",
+            "paid",
+            "stripe_transfer_id",
+            "money_amount",
+            "currency",
+            "admin_approve"
+        ]
 
 
 class CommissionStripePayoutSerializer(serializers.Serializer):
