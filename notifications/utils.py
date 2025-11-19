@@ -57,3 +57,8 @@ def send_notification(user_id, message, notification_type, notification_title):
             },
         )
         push_notify_user(user_id, message, notification_title)
+
+
+def send_notification_to_multiple_users(users, message, notification_type, notification_title):
+    for user in users:
+        send_notification(user.id, message, notification_type, notification_title)
