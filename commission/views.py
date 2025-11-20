@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
 from commission.utlis import create_stripe_recipient
-from notifications.utils import send_notification_to_multiple_users
+from notifications.utils import send_notification_to_multiple_users, send_notification
 from prospect.models import Prospect
 from prospect.permissions import IsSuperUser
 from prospect.utils import get_invitation_user_chain_from_prospect, get_currency_by_country_code
@@ -142,6 +142,13 @@ class StripeRecipientView(APIView):
                 commission.admin_approve = True
                 commission.approved_by_user = request.user
                 commission.save()
+
+                send_notification(
+                    commission_recipient.id,
+                    "Commission approved, please visit ambassador dashboard to receive money",
+                    "info",
+                    "Your commission has been approved"
+                )
                 return Response(
                     {"detail": "Success"}, status=status.HTTP_200_OK
                 )
