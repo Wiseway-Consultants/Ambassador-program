@@ -71,6 +71,7 @@ class StripeProfileView(APIView):
             logger.error(f"Error creating Stripe recipient account: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class StripeOnboardingEmailView(APIView):
 
     permission_classes = [IsAuthenticated, ]
@@ -119,7 +120,7 @@ class StripePayoutsView(APIView):
             commission.stripe_transfer_id = transfer["id"]
             commission.paid = True
             commission.save()
-            return Response({"transfer": transfer})
+            return Response({"transfer": transfer}, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error creating stripe payout: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
