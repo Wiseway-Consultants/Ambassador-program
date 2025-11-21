@@ -13,9 +13,9 @@ from commission.models import Commission
 from commission.serializers import CommissionStripePayoutSerializer
 from commission.utlis import (
     retrieve_recipient_stripe,
-    create_bank_account_link,
+    create_bank_account_onboarding_link,
     create_stripe_transfer_from_commission,
-    create_stripe_recipient
+    create_stripe_recipient, create_bank_account_update_link
 )
 from utils.send_email import send_email
 
@@ -86,9 +86,32 @@ class StripeOnboardingEmailView(APIView):
             return Response({"error": "You already onboarded"}, status=status.HTTP_400_BAD_REQUEST)
         try:
 
-            account_link = create_bank_account_link(recipient_account_id)
-            logger.info(f"User: {user.id} Stripe recipient account link: {account_link}")
+            account_link = create_bank_account_onboarding_link(recipient_account_id)
+            logger.info(f"User: {user.id} Stripe recipient account onboard link: {account_link}")
             send_email(user=user, url=account_link, email_type="stripe_onboarding")
+            logger.info("Stripe recipient email sent")
+
+            return Response({"detail": "Email sent successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error to send email: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class StripeAccountUpdateEmailView(APIView):
+
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request):
+        user = request.user
+
+        recipient_account_id = user.stripe_account_id
+        if not recipient_account_id:
+            return Response({"error": "Stripe recipient account not found"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+
+            account_link = create_bank_account_update_link(recipient_account_id)
+            logger.info(f"User: {user.id} Stripe recipient account update link: {account_link}")
+            send_email(user=user, url=account_link, email_type="stripe_account_update")
             logger.info("Stripe recipient email sent")
 
             return Response({"detail": "Email sent successfully"}, status=status.HTTP_200_OK)
