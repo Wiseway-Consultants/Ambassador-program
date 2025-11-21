@@ -107,7 +107,7 @@ def create_stripe_recipient(user: User):
     return response.json()["id"]
 
 
-def create_bank_account_link(recipient_id: str):
+def create_bank_account_onboarding_link(recipient_id: str):
     url = "https://api.stripe.com/v2/core/account_links"
 
     data = {
@@ -118,8 +118,8 @@ def create_bank_account_link(recipient_id: str):
                 "configurations": [
                     "recipient"
                 ],
-                "return_url": "https://savefryoil.com/ambassador-referrals/claimed-commissions/",
-                "refresh_url": "https://savefryoil.com/ambassador-referrals/claimed-commissions/"
+                "return_url": "https://savefryoil.com/ambassador-referrals/stripe-profile/",
+                "refresh_url": "https://savefryoil.com/ambassador-referrals/stripe-profile/"
             }
         }
     }
@@ -130,7 +130,34 @@ def create_bank_account_link(recipient_id: str):
         headers=HEADERS
     )
 
-    logger.info(f"Bank account link response: {response.json()}")
+    logger.info(f"Bank account onboard link response: {response.json()}")
+    return response.json()["url"]
+
+
+def create_bank_account_update_link(recipient_id: str):
+    url = "https://api.stripe.com/v2/core/account_links"
+
+    data = {
+    "account": recipient_id,
+    "use_case": {
+        "type": "account_update",
+        "account_update": {
+            "configurations": [
+                "recipient"
+            ],
+            "return_url": "https://savefryoil.com/ambassador-referrals/stripe-profile/",
+            "refresh_url": "https://savefryoil.com/ambassador-referrals/stripe-profile/"
+        }
+    }
+  }
+
+    response = requests.post(
+        url,
+        json=data,
+        headers=HEADERS
+    )
+
+    logger.info(f"Bank account update link response: {response.json()}")
     return response.json()["url"]
 
 
