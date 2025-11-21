@@ -191,8 +191,10 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
+ACCESS_TOKEN_LIFETIME = getenv("JWT_ACCESS_TOKEN_LIFETIME", 60)
+
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # default: 5 minutes
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(ACCESS_TOKEN_LIFETIME)),  # default: 5 minutes
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # default: 1 day
     "ROTATE_REFRESH_TOKENS": False,  # if True → new refresh token each time
     "BLACKLIST_AFTER_ROTATION": True,  # blacklist old refresh token if rotated
