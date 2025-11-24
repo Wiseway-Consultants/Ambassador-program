@@ -59,8 +59,9 @@ class GoogleLoginView(APIView):
             }
 
             token_response = requests.post(token_url, data=token_data)
-            token_response.raise_for_status()
             tokens = token_response.json()
+            logger.debug(f"Response from Google tokens: {tokens}")
+            token_response.raise_for_status()
 
             # Verify Google ID token
 
