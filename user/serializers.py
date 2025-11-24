@@ -16,6 +16,8 @@ class UserSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
+    has_usable_password = serializers.SerializerMethodField()
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -30,7 +32,8 @@ class UserSerializer(serializers.ModelSerializer):
             "is_accepted_terms",
             "referral_code",
             "is_staff",
-            "is_superuser"
+            "is_superuser",
+            "has_usable_password"
         )
 
         read_only_fields = ("id", "is_staff", "is_superuser")
@@ -41,6 +44,9 @@ class UserSerializer(serializers.ModelSerializer):
                 "required": False,
             }
         }
+
+    def get_has_usable_password(self, obj):
+        return obj.has_usable_password()
 
     def create(self, validated_data):
         referral_code = validated_data.pop("referral_code", None)
