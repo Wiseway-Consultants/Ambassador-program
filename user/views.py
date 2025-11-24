@@ -1,17 +1,21 @@
 import logging
+import requests
 
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
-from django.db.models import Value, BooleanField, F
+from django.db.models import F
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
 from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from notifications.utils import send_notification
 from prospect.permissions import IsStaffUser, IsSuperUser
@@ -24,6 +28,100 @@ User = get_user_model()
 signer = TimestampSigner()
 
 logger = logging.getLogger(__name__)
+
+
+class GoogleLoginView(APIView):
+    """
+    Google OAuth login - returns JWT tokens directly
+    """
+    http_method_names = ["post"]
+
+    def post(self, request):
+        logger.info(f"Google sign in/up request")
+        code = request.data.get('code')
+
+        if not code:
+            logger.error("Request body missing a google code")
+            return Response(
+                {'error': 'Authorization code is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Exchange code for Google tokens
+            token_url = 'https://oauth2.googleapis.com/token'
+            token_data = {
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                'redirect_uri': settings.GOOGLE_OAUTH_REDIRECT_URI,
+                'grant_type': 'authorization_code',
+            }
+
+            token_response = requests.post(token_url, data=token_data)
+            token_response.raise_for_status()
+            tokens = token_response.json()
+
+            # Verify Google ID token
+
+            logger.info("Start google's token verification")
+            id_info = id_token.verify_oauth2_token(
+                tokens['id_token'],
+                google_requests.Request(),
+                settings.GOOGLE_OAUTH_CLIENT_ID
+            )
+
+            email = id_info.get('email')
+            email_verified = id_info.get('email_verified', False)
+            first_name = id_info.get('given_name', '')
+            last_name = id_info.get('family_name', '')
+
+            if not email_verified:
+                logger.error("Email verification failed")
+                return Response(
+                    {'error': 'Email not verified by Google'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            with transaction.atomic():
+                # Get or create user
+                logger.info("Start get or create user")
+                user, created = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        'email': email,
+                        'first_name': first_name,
+                        'last_name': last_name,
+                        'is_active': True,
+                    }
+                )
+
+                if created:
+                    logger.info(f"User is created with id: {user.id}")
+                    user.set_unusable_password()
+                    user.save()
+                else:
+                    # Activate if not active
+                    if not user.is_active:
+                        user.is_active = True
+                        user.save()
+
+                # Generate JWT tokens - SAME AS EMAIL/PASSWORD LOGIN
+                logger.info("Generate JWT token")
+                refresh = RefreshToken.for_user(user)
+                logger.info("JWT token generated successfully")
+
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Google OAuth error: {str(e)}")
+            return Response(
+                {'error': 'Authentication failed'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class RegisterView(APIView):
