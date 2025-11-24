@@ -102,6 +102,7 @@ class GoogleLoginView(APIView):
                     user.set_unusable_password()
                     user.save()
                 else:
+                    logger.info(f"User already registered")
                     # Activate if not active
                     if not user.is_active:
                         user.is_active = True
@@ -336,10 +337,13 @@ class ProfileView(APIView):
         if serializer.is_valid():
             user = request.user
 
-            if not user.check_password(serializer.validated_data["old_password"]):
-                logger.error(f"Wrong old password input")
-                return Response({"old_password": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+            if user.has_usable_password():
+                if not user.check_password(serializer.validated_data["old_password"]):
+                    logger.error(f"Wrong old password input")
+                    return Response({"old_password": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
 
+            else:
+                logger.info("Skipping old password check because user has no usable password")
             user.set_password(serializer.validated_data["new_password"])
             user.save()
 
