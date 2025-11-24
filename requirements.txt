@@ -9,6 +9,9 @@ Django==5.2.6
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 stripe==13.2.0
+google-auth==2.41.1
+google-auth-httplib2==0.2.1
+google-auth-oauthlib==1.2.3
 gunicorn==23.0.0
 h11==0.16.0
 idna==3.10
