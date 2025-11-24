@@ -83,5 +83,5 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=False)
     new_password = serializers.CharField(required=True, validators=[validate_password])
