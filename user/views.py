@@ -37,39 +37,24 @@ class GoogleLoginView(APIView):
     http_method_names = ["post"]
 
     def post(self, request):
-        logger.info(f"Google sign in/up request")
-        code = request.data.get('code')
+        logger.info(f"Google sign in/up data: {request.data}")
+        google_id_token = request.data.get('id_token')
+        client_id = request.data.get('client_id')
 
-        if not code:
-            logger.error("Request body missing a google code")
+        if not google_id_token or not client_id:
+            logger.error("Request body missing a google id_token or client_id")
             return Response(
-                {'error': 'Authorization code is required'},
+                {'error': 'Google id_token and client_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         try:
-            # Exchange code for Google tokens
-            token_url = 'https://oauth2.googleapis.com/token'
-            token_data = {
-                'code': code,
-                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
-                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
-                'redirect_uri': settings.GOOGLE_OAUTH_REDIRECT_URI,
-                'grant_type': 'authorization_code',
-            }
-
-            token_response = requests.post(token_url, data=token_data)
-            tokens = token_response.json()
-            logger.debug(f"Response from Google tokens: {tokens}")
-            token_response.raise_for_status()
 
             # Verify Google ID token
-
             logger.info("Start google's token verification")
             id_info = id_token.verify_oauth2_token(
-                tokens['id_token'],
+                google_id_token,
                 google_requests.Request(),
-                settings.GOOGLE_OAUTH_CLIENT_ID
+                client_id
             )
 
             email = id_info.get('email')
