@@ -347,6 +347,17 @@ class ProfileView(APIView):
         logger.error(f"Password wasn't changed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request):
+        user = request.user
+        logger.info(f"Received request to delete: {user.email} with id - {user.id}")
+        try:
+            user.delete()
+            logger.info("User deleted successfully")
+            return Response({"detail": "User deleted successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error deleting user with id {user.id}: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class StaffAmbassadorView(ListAPIView):
     permission_classes = [IsStaffUser]
