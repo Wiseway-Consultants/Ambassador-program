@@ -16,7 +16,8 @@ class EmailUserAdmin(UserAdmin):
             'last_name',
             'is_accepted_terms',
             'currency',
-            'organization_name'
+            'organization_name',
+            'apple_user_id'
         )}),
         (_('Referral info'), {'fields': (
             'referral_qr_code_id',

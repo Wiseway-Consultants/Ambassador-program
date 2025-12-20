@@ -112,6 +112,7 @@ class User(AbstractUser):
 
     stripe_account_id = models.CharField(max_length=128, blank=True, null=True)
     stripe_onboard_status = models.BooleanField(default=False)
+    apple_user_id = models.CharField(max_length=64, unique=True, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = [
