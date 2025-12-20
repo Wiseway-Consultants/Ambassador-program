@@ -12,11 +12,13 @@ from .views import (EmailTokenObtainPairView,
                     StaffQrCodeView,
                     StaffAmbassadorView,
                     AdminAmbassadorView,
-                    GoogleLoginView
+                    GoogleLoginView,
+                    AppleSignInView
                     )
 
 urlpatterns = [
     path('oauth/google/', GoogleLoginView.as_view(), name='google-login'),
+    path('oauth/apple/', AppleSignInView.as_view(), name='apple-login'),
     path('register/', RegisterView.as_view(), name='token_obtain_pair'),
     path("auth/confirm-email/", ConfirmEmailView.as_view(), name="confirm-email"),
     path("auth/resend-confirmation/", ResendConfirmationView.as_view(), name="resend-confirm-email"),
