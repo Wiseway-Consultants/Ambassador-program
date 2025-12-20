@@ -1,5 +1,8 @@
 import logging
 import requests
+import jwt
+from jwt.algorithms import RSAAlgorithm
+import time
 
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
@@ -109,6 +112,122 @@ class GoogleLoginView(APIView):
                 {'error': 'Authentication failed'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class AppleSignInView(APIView):
+    permission_classes = []
+
+    def post(self, request):
+        logger.info(f"Payload: {request.data}")
+        identity_token = request.data.get('identity_token')
+        user_id = request.data.get('user_id')
+        email = request.data.get('email')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+
+        if not identity_token:
+            return Response(
+                {'error': 'identity_token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify the identity token
+        try:
+            decoded_token = self.verify_apple_token(identity_token)
+        except Exception as e:
+            return Response(
+                {'error': f'Invalid token: {str(e)}'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Extract user info from token
+        apple_user_id = decoded_token.get('sub')
+        token_email = decoded_token.get('email')
+        logger.info(f"token_email: {token_email}")
+
+        # Use email from token if available, otherwise from request
+        user_email = token_email or email
+
+        # if not user_email:
+        #     return Response(
+        #         {'error': 'Email is required'},
+        #         status=status.HTTP_400_BAD_REQUEST
+        #     )
+
+        # Get or create user
+        user, created = User.objects.get_or_create(
+            apple_user_id=apple_user_id,
+            defaults={
+                'is_active': True
+            }
+        )
+
+        # Update name only if user was just created and names were provided
+        if created and (first_name or last_name or user_email):
+            if first_name:
+                user.first_name = first_name
+            if last_name:
+                user.last_name = last_name
+            if user_email:
+                user.email = user_email
+            user.save()
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'is_new_user': created,
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+        }, status=status.HTTP_200_OK)
+
+    def verify_apple_token(self, identity_token):
+        """
+        Verify Apple's identity token
+        """
+        # Get Apple's public keys
+        apple_keys_url = 'https://appleid.apple.com/auth/keys'
+        response = requests.get(apple_keys_url)
+        apple_keys = response.json()
+        logger.info(f"Apple keys: {apple_keys}")
+
+        # Decode token header to get the key id (kid)
+        header = jwt.get_unverified_header(identity_token)
+        logger.info(f"header from identity token: {header}")
+        kid = header.get('kid')
+
+        # Find the matching public key
+        public_key = None
+        for key in apple_keys['keys']:
+            if key['kid'] == kid:
+                public_key = RSAAlgorithm.from_jwk(key)
+                break
+
+        logger.info(f"Public key: {public_key}")
+        if not public_key:
+            raise ValueError('Unable to find matching public key')
+
+        # Verify and decode the token
+        decoded = jwt.decode(
+            identity_token,
+            public_key,
+            algorithms=['RS256'],
+            audience='com.savefryoil.ambassador',  # Replace with your iOS app bundle ID
+            issuer='https://appleid.apple.com'
+        )
+        logger.info(f"decoded JWT: {decoded}")
+
+        # Verify expiration
+        if decoded.get('exp', 0) < time.time():
+            raise ValueError('Token has expired')
+
+        return decoded
 
 
 class RegisterView(APIView):
