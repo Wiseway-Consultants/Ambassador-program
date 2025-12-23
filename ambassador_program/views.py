@@ -73,7 +73,7 @@ class GetUserByEmailView(APIView):
             data = request.query_params
             user = get_user_model().objects.filter(email=data["rm_email"]).first()
             logger.info(user)
-            return Response({"user_id": user.id}, status=200)
+            return Response({"user_id": user.id, "user_referral_code": user.referral_code}, status=200)
         except Exception as e:
             logger.error(f"Error with get user by email: {e}")
             return Response(f"Error: {e}", status=400)
