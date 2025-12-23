@@ -148,12 +148,6 @@ class AppleSignInView(APIView):
         # Use email from token if available, otherwise from request
         user_email = token_email or email
 
-        # if not user_email:
-        #     return Response(
-        #         {'error': 'Email is required'},
-        #         status=status.HTTP_400_BAD_REQUEST
-        #     )
-
         # Get or create user
         user, created = User.objects.get_or_create(
             apple_user_id=apple_user_id,
