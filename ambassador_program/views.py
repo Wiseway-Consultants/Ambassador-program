@@ -2,6 +2,7 @@ import logging
 from os import path
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -62,3 +63,17 @@ class QRCodeView(APIView):
         except Exception as e:
             return Response(f"Error: {e}", status=400)
 
+
+class GetUserByEmailView(APIView):
+    def get(self, request):
+        logger.info(f"Received request to retrieve user by email. /users/admin/")
+        headers = request.headers
+        try:
+            check_auth_key(headers)
+            data = request.query_params
+            user = get_user_model().objects.filter(email=data["rm_email"]).first()
+            logger.info(user)
+            return Response({"user_id": user.id}, status=200)
+        except Exception as e:
+            logger.error(f"Error with get user by email: {e}")
+            return Response(f"Error: {e}", status=400)

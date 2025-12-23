@@ -19,11 +19,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from ambassador_program.views import openapi_yaml, GHLview, QRCodeView
+from ambassador_program.views import openapi_yaml, GHLview, QRCodeView, GetUserByEmailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('users/', include('user.urls')),
+    path('users/admin/', GetUserByEmailView.as_view(), name='users'),
     path('notifications/', include('notifications.urls')),
     path('prospects/', include('prospect.urls')),
     path('commission/', include('commission.urls')),
