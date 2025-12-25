@@ -18,7 +18,7 @@ class Prospect(models.Model):
     claimed = models.BooleanField(default=False)
     invited_by_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="prospects",
         null=True,
         blank=True
