@@ -464,8 +464,8 @@ class ProfileView(APIView):
         user = request.user
         logger.info(f"Received request to delete: {user.email} with id - {user.id}")
         try:
-            user.delete()
-            logger.info("User deleted successfully")
+            user.is_active = False
+            logger.info("User 'deleted'(set to inactive) successfully")
             return Response({"detail": "User deleted successfully"}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.error(f"Error deleting user with id {user.id}: {e}")
