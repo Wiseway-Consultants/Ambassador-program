@@ -272,7 +272,7 @@ class ConfirmEmailView(APIView):
             return render(request, "email_verified.html", {"error": "Missing token or password."})
 
         try:
-            email = signer.unsign(token, max_age=60 * 60 * 24)
+            email = signer.unsign(token, max_age=60 * 60 * 48)
             user = User.objects.get(email=email)
 
             if user.is_active:  # Check if user already active
@@ -304,7 +304,7 @@ class ConfirmEmailView(APIView):
     def get(self, request, *args, **kwargs):
         token = request.query_params.get("token")
         try:
-            email = signer.unsign(token, max_age=60 * 60 * 24)
+            email = signer.unsign(token, max_age=60 * 60 * 48)
             user = User.objects.get(email=email)
 
             if user.is_active:  # Check if user already active
