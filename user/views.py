@@ -21,11 +21,12 @@ from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 
 from notifications.utils import send_notification
+from prospect.models import Prospect
 from prospect.permissions import IsStaffUser, IsSuperUser
 from utils.qr_code_tiger_api import qrTigerAPI
 from utils.send_telegram_notification import send_telegram_notification
 from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer, AdminUserSerializer
-from utils.send_email import send_email
+from utils.send_email import send_email, send_notification_email
 
 User = get_user_model()
 signer = TimestampSigner()
@@ -43,6 +44,7 @@ class GoogleLoginView(APIView):
         logger.info(f"Google sign in/up data: {request.data}")
         google_id_token = request.data.get('id_token')
         client_id = request.data.get('client_id')
+        referral_code = request.data.get('referral_code')
 
         if not google_id_token or not client_id:
             logger.error("Request body missing a google id_token or client_id")
@@ -87,6 +89,35 @@ class GoogleLoginView(APIView):
 
                 if created:
                     logger.info(f"User is created with id: {user.id}")
+                    inviter_user = None
+
+                    prospect = Prospect.objects.filter(email=email).first()
+                    # CASE A: inviter from referral code
+                    if referral_code:
+                        inviter_user = User.objects.filter(referral_code=referral_code).first()
+                        logger.info(f"User: {inviter_user} is referring to prospect")
+
+                    # CASE B: user existed as prospect
+                    if prospect:
+                        inviter_user = prospect.invited_by_user
+                        logger.info("User existed as a prospect before")
+
+                    if prospect:
+                        user.is_prospect = True
+
+                    # link referral
+                    if inviter_user:
+                        user.invited_by_user = inviter_user
+                        # Send email notification to User who invited this ambassador
+                        send_notification_email(to_user=inviter_user, notification_object=user,
+                                                notification_type="user")
+                        send_notification(
+                            inviter_user.id,
+                            f"New Ambassador: {user.first_name} {user.last_name}\n"
+                            f"registered using your referral code",
+                            "info",
+                            "Your new Ambassador",
+                        )
                     user.set_unusable_password()
                     user.save()
                 else:
