@@ -37,6 +37,7 @@ class CustomUserManager(BaseUserManager):
         # CASE B: user existed as prospect
         if prospect:
             inviter_user = prospect.invited_by_user
+            logger.info("User existed as a prospect before")
 
         user = self.model(email=email, phone=phone, **extra_fields)
 
