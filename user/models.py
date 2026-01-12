@@ -51,7 +51,7 @@ class CustomUserManager(BaseUserManager):
             send_notification(
                 inviter_user.id,
                 f"New Ambassador: {user.first_name} {user.last_name}\n"
-                f"register using you referral code",
+                f"registered using your referral code",
                 "info",
                 "Your new Ambassador",
             )
