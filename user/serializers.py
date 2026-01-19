@@ -8,6 +8,12 @@ class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
     username_field = get_user_model().USERNAME_FIELD
 
 
+class InvitedByUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ("id", "email", "first_name", "last_name")
+
+
 class UserSerializer(serializers.ModelSerializer):
     referral_code = serializers.CharField(
         required=False,
@@ -15,6 +21,7 @@ class UserSerializer(serializers.ModelSerializer):
         allow_null=True,
         write_only=True
     )
+    invited_by_user = InvitedByUserSerializer(read_only=True)
 
     has_usable_password = serializers.SerializerMethodField()
 
@@ -28,6 +35,7 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "currency",
+            "invited_by_user",
             "organization_name",
             "is_accepted_terms",
             "referral_code",
@@ -36,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
             "has_usable_password"
         )
 
-        read_only_fields = ("id", "is_staff", "is_superuser", "has_usable_password")
+        read_only_fields = ("id", "is_staff", "is_superuser", "has_usable_password", "invited_by_user")
 
         extra_kwargs = {
             "password": {
