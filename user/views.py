@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.db import transaction
 from django.db.models import F
 from django.shortcuts import render
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -445,20 +446,21 @@ class ProfileView(APIView):
         return Response(serializer.data)
 
     def put(self, request):
-        logger.info(f"Received request to update user profile {request.user.email}, data: {request.data}")
-        serializer = UserSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            send_notification(
-                request.user.id,
-                "You successfully updated your profile",
-                "success",
-                "Profile Updated"
+        try:
+            serializer = UserSerializer(
+                request.user,
+                data=request.data,
+                partial=True
             )
-            logger.info(f"Profile updated successfully")
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
             return Response(serializer.data)
-        logger.error(f"Error, user was not updated: {serializer.errors}")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as exc:
+            logger.error(
+                f"Profile update failed for {request.user.email}",
+                exc_info=True
+            )
+            raise
 
     def patch(self, request):
         logger.info(f"Received request to change {request.user.email} password")
