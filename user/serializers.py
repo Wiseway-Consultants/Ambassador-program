@@ -1,7 +1,11 @@
+import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
+
+
+logger = logging.getLogger(__name__)
 
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
@@ -22,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         write_only=True
     )
     invited_by_user = InvitedByUserSerializer(read_only=True)
+    invited_by_user_id = serializers.IntegerField(write_only=True, required=False)
 
     has_usable_password = serializers.SerializerMethodField()
 
@@ -36,15 +41,17 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "currency",
             "invited_by_user",
+            "invited_by_user_id",
             "organization_name",
             "is_accepted_terms",
             "referral_code",
             "is_staff",
             "is_superuser",
-            "has_usable_password"
+            "has_usable_password",
+            "skip_invitation_code_input"
         )
 
-        read_only_fields = ("id", "is_staff", "is_superuser", "has_usable_password", "invited_by_user")
+        read_only_fields = ("id", "is_staff", "is_superuser", "has_usable_password")
 
         extra_kwargs = {
             "password": {
