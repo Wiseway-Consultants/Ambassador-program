@@ -72,6 +72,26 @@ class UserSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+    def update(self, instance, validated_data):
+        logger.info(f"Validated data for update: {validated_data}")
+
+        if instance.invited_by_user:
+            raise serializers.ValidationError(
+                {"invited_by_user": "User already been invited"}
+            )
+        invited_by_id = validated_data.pop('invited_by_user_id', None)
+
+        if invited_by_id is not None:
+            user = get_user_model()
+            try:
+                referrer = user.objects.get(id=invited_by_id)
+                instance.invited_by_user = referrer
+            except user.DoesNotExist:
+                raise serializers.ValidationError(
+                    {"invited_by_user_id": "User with this ID does not exist."}
+                )
+        return super().update(instance, validated_data)
+
 
 class AdminUserSerializer(serializers.ModelSerializer):
     is_invited_by_rm = serializers.BooleanField(read_only=True)
