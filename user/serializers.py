@@ -77,7 +77,7 @@ class UserSerializer(serializers.ModelSerializer):
 
         if instance.invited_by_user:
             raise serializers.ValidationError(
-                {"invited_by_user": "User already been invited"}
+                {"error": "User already been invited"}
             )
         invited_by_id = validated_data.pop('invited_by_user_id', None)
 
@@ -88,7 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
                 instance.invited_by_user = referrer
             except user.DoesNotExist:
                 raise serializers.ValidationError(
-                    {"invited_by_user_id": "User with this ID does not exist."}
+                    {"error": "User with this invitation ID does not exist."}
                 )
         return super().update(instance, validated_data)
 
