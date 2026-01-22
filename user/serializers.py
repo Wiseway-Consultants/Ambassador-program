@@ -74,12 +74,12 @@ class UserSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         logger.info(f"Validated data for update: {validated_data}")
+        invited_by_id = validated_data.pop('invited_by_user_id', None)
 
-        if instance.invited_by_user:
+        if invited_by_id and instance.invited_by_user:
             raise serializers.ValidationError(
                 {"error": "User already been invited"}
             )
-        invited_by_id = validated_data.pop('invited_by_user_id', None)
 
         if invited_by_id is not None:
             user = get_user_model()
