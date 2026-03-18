@@ -26,13 +26,65 @@ from prospect.models import Prospect
 from prospect.permissions import IsStaffUser, IsSuperUser
 from utils.qr_code_tiger_api import qrTigerAPI
 from utils.send_telegram_notification import send_telegram_notification
-from .serializers import UserSerializer, TokenObtainPairSerializer, ChangePasswordSerializer, AdminUserSerializer
+from .auth_backends import verify_ambassador_login_salt
+from .serializers import (
+    UserSerializer,
+    TokenObtainPairSerializer,
+    ChangePasswordSerializer,
+    AdminUserSerializer,
+)
 from utils.send_email import send_email, send_notification_email
 
 User = get_user_model()
 signer = TimestampSigner()
+SALT_LOGIN_SECRET = settings.SALT_LOGIN_SECRET
 
 logger = logging.getLogger(__name__)
+
+
+class SaltTokenLoginView(APIView):
+    """
+    Login to Ambassador via email and Salt Token verifier
+    """
+
+    http_method_names = ["post"]
+
+    def post(self, request):
+        data = request.data
+        logger.info(f"Salt Token Login data: {data}")
+        email = data.get("email")
+        salt_token = data.get("token")
+        ts = data.get("ts")
+
+        if not all([email, salt_token, ts]):
+            logger.error("Missing required fields")
+            return Response(
+                {"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not verify_ambassador_login_salt(email, ts, salt_token):
+            logger.error("Invalid salt token")
+            return Response(
+                {"error": "Invalid Token Provided"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            logger.error("User not found")
+            return Response(
+                {"error": "User not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        refresh = RefreshToken.for_user(user)
+        logger.info("JWT token generated successfully")
+        return Response(
+            {
+                "refresh": str(refresh),
+                "access_token": str(refresh.access_token)
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class GoogleLoginView(APIView):
