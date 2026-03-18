@@ -91,40 +91,39 @@ class GoogleLoginView(APIView):
     """
     Google OAuth login - returns JWT tokens directly
     """
+
     http_method_names = ["post"]
 
     def post(self, request):
         logger.info(f"Google sign in/up data: {request.data}")
-        google_id_token = request.data.get('id_token')
-        client_id = request.data.get('client_id')
-        referral_code = request.data.get('referral_code')
+        google_id_token = request.data.get("id_token")
+        client_id = request.data.get("client_id")
+        referral_code = request.data.get("referral_code")
 
         if not google_id_token or not client_id:
             logger.error("Request body missing a google id_token or client_id")
             return Response(
-                {'error': 'Google id_token and client_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Google id_token and client_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
         try:
 
             # Verify Google ID token
             logger.info("Start google's token verification")
             id_info = id_token.verify_oauth2_token(
-                google_id_token,
-                google_requests.Request(),
-                client_id
+                google_id_token, google_requests.Request(), client_id
             )
 
-            email = id_info.get('email')
-            email_verified = id_info.get('email_verified', False)
-            first_name = id_info.get('given_name', '')
-            last_name = id_info.get('family_name', '')
+            email = id_info.get("email")
+            email_verified = id_info.get("email_verified", False)
+            first_name = id_info.get("given_name", "")
+            last_name = id_info.get("family_name", "")
 
             if not email_verified:
                 logger.error("Email verification failed")
                 return Response(
-                    {'error': 'Email not verified by Google'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"error": "Email not verified by Google"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             with transaction.atomic():
@@ -133,11 +132,11 @@ class GoogleLoginView(APIView):
                 user, created = User.objects.get_or_create(
                     email=email,
                     defaults={
-                        'email': email,
-                        'first_name': first_name,
-                        'last_name': last_name,
-                        'is_active': True,
-                    }
+                        "email": email,
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "is_active": True,
+                    },
                 )
 
                 if created:
@@ -147,7 +146,9 @@ class GoogleLoginView(APIView):
                     prospect = Prospect.objects.filter(email=email).first()
                     # CASE A: inviter from referral code
                     if referral_code:
-                        inviter_user = User.objects.filter(referral_code=referral_code).first()
+                        inviter_user = User.objects.filter(
+                            referral_code=referral_code
+                        ).first()
                         logger.info(f"User: {inviter_user} is referring to prospect")
 
                     # CASE B: user existed as prospect
@@ -162,8 +163,11 @@ class GoogleLoginView(APIView):
                     if inviter_user:
                         user.invited_by_user = inviter_user
                         # Send email notification to User who invited this ambassador
-                        send_notification_email(to_user=inviter_user, notification_object=user,
-                                                notification_type="user")
+                        send_notification_email(
+                            to_user=inviter_user,
+                            notification_object=user,
+                            notification_type="user",
+                        )
                         send_notification(
                             inviter_user.id,
                             f"New Ambassador: {user.first_name} {user.last_name}\n"
@@ -185,16 +189,18 @@ class GoogleLoginView(APIView):
                 refresh = RefreshToken.for_user(user)
                 logger.info("JWT token generated successfully")
 
-                return Response({
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                }, status=status.HTTP_200_OK)
+                return Response(
+                    {
+                        "refresh": str(refresh),
+                        "access": str(refresh.access_token),
+                    },
+                    status=status.HTTP_200_OK,
+                )
 
         except Exception as e:
             logger.error(f"Google OAuth error: {str(e)}")
             return Response(
-                {'error': 'Authentication failed'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Authentication failed"}, status=status.HTTP_400_BAD_REQUEST
             )
 
 
@@ -203,16 +209,16 @@ class AppleSignInView(APIView):
 
     def post(self, request):
         logger.info(f"Payload: {request.data}")
-        identity_token = request.data.get('identity_token')
-        user_id = request.data.get('user_id')
-        email = request.data.get('email')
-        first_name = request.data.get('first_name', '')
-        last_name = request.data.get('last_name', '')
+        identity_token = request.data.get("identity_token")
+        user_id = request.data.get("user_id")
+        email = request.data.get("email")
+        first_name = request.data.get("first_name", "")
+        last_name = request.data.get("last_name", "")
 
         if not identity_token:
             return Response(
-                {'error': 'identity_token is required'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "identity_token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Verify the identity token
@@ -220,13 +226,13 @@ class AppleSignInView(APIView):
             decoded_token = self.verify_apple_token(identity_token)
         except Exception as e:
             return Response(
-                {'error': f'Invalid token: {str(e)}'},
-                status=status.HTTP_401_UNAUTHORIZED
+                {"error": f"Invalid token: {str(e)}"},
+                status=status.HTTP_401_UNAUTHORIZED,
             )
 
         # Extract user info from token
-        apple_user_id = decoded_token.get('sub')
-        token_email = decoded_token.get('email')
+        apple_user_id = decoded_token.get("sub")
+        token_email = decoded_token.get("email")
         logger.info(f"token_email: {token_email}")
 
         # Use email from token if available, otherwise from request
@@ -234,10 +240,7 @@ class AppleSignInView(APIView):
 
         # Get or create user
         user, created = User.objects.get_or_create(
-            apple_user_id=apple_user_id,
-            defaults={
-                'is_active': True
-            }
+            apple_user_id=apple_user_id, defaults={"is_active": True}
         )
 
         # Update name only if user was just created and names were provided
@@ -253,24 +256,27 @@ class AppleSignInView(APIView):
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
 
-        return Response({
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-            'is_new_user': created,
-            'user': {
-                'id': user.id,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-            }
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "is_new_user": created,
+                "user": {
+                    "id": user.id,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                },
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def verify_apple_token(self, identity_token):
         """
         Verify Apple's identity token
         """
         # Get Apple's public keys
-        apple_keys_url = 'https://appleid.apple.com/auth/keys'
+        apple_keys_url = "https://appleid.apple.com/auth/keys"
         response = requests.get(apple_keys_url)
         apple_keys = response.json()
         logger.info(f"Apple keys: {apple_keys}")
@@ -278,32 +284,32 @@ class AppleSignInView(APIView):
         # Decode token header to get the key id (kid)
         header = jwt.get_unverified_header(identity_token)
         logger.info(f"header from identity token: {header}")
-        kid = header.get('kid')
+        kid = header.get("kid")
 
         # Find the matching public key
         public_key = None
-        for key in apple_keys['keys']:
-            if key['kid'] == kid:
+        for key in apple_keys["keys"]:
+            if key["kid"] == kid:
                 public_key = RSAAlgorithm.from_jwk(key)
                 break
 
         logger.info(f"Public key: {public_key}")
         if not public_key:
-            raise ValueError('Unable to find matching public key')
+            raise ValueError("Unable to find matching public key")
 
         # Verify and decode the token
         decoded = jwt.decode(
             identity_token,
             public_key,
-            algorithms=['RS256'],
-            audience='com.savefryoil.ambassador',  # Replace with your iOS app bundle ID
-            issuer='https://appleid.apple.com'
+            algorithms=["RS256"],
+            audience="com.savefryoil.ambassador",  # Replace with your iOS app bundle ID
+            issuer="https://appleid.apple.com",
         )
         logger.info(f"decoded JWT: {decoded}")
 
         # Verify expiration
-        if decoded.get('exp', 0) < time.time():
-            raise ValueError('Token has expired')
+        if decoded.get("exp", 0) < time.time():
+            raise ValueError("Token has expired")
 
         return decoded
 
@@ -318,19 +324,18 @@ class RegisterView(APIView):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             logger.error(f"serializer error {serializer.errors}")
-            send_telegram_notification(f"Error Ambassador Registration {serializer.errors}")
+            send_telegram_notification(
+                f"Error Ambassador Registration {serializer.errors}"
+            )
             return Response(
-                {"errors": serializer.errors},
-                status=status.HTTP_400_BAD_REQUEST
+                {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
             )
 
         with transaction.atomic():
             validated_data = serializer.validated_data
             password = validated_data.pop("password", None)
             user = User.objects.create_user(
-                **validated_data,
-                password=password,
-                is_active=False
+                **validated_data, password=password, is_active=False
             )
 
             token = signer.sign(user.email)
@@ -339,8 +344,10 @@ class RegisterView(APIView):
             send_email(user, confirm_url, "confirm")
 
         return Response(
-            {"detail": "Account created. Please check your email to confirm registration."},
-            status=status.HTTP_201_CREATED
+            {
+                "detail": "Account created. Please check your email to confirm registration."
+            },
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -353,7 +360,9 @@ class ConfirmEmailView(APIView):
         password = request.data.get("password")
         if not token or not password:
             logger.error(f"Token and password missing in email confirmation request")
-            return render(request, "email_verified.html", {"error": "Missing token or password."})
+            return render(
+                request, "email_verified.html", {"error": "Missing token or password."}
+            )
 
         try:
             email = signer.unsign(token, max_age=60 * 60 * 48)
@@ -369,7 +378,9 @@ class ConfirmEmailView(APIView):
 
             is_password_set = user.has_usable_password()
             logger.info(f"Password is successfully set")
-            return render(request, "email_verified.html", {"password_set": is_password_set})
+            return render(
+                request, "email_verified.html", {"password_set": is_password_set}
+            )
         except SignatureExpired:  # render resend button if token expired
             logger.error(f"Signature Expired")
             return render(
@@ -378,12 +389,16 @@ class ConfirmEmailView(APIView):
                 {
                     "error": "Your confirmation link has expired.",
                     "resend": True,
-                    "email": signer.unsign(token, max_age=None)
+                    "email": signer.unsign(token, max_age=None),
                 },
             )
         except (BadSignature, User.DoesNotExist):
             logger.error(f"Bad signature or user does not exist")
-            return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
+            return render(
+                request,
+                "email_verified.html",
+                {"error": "Invalid or broken confirmation link."},
+            )
 
     def get(self, request, *args, **kwargs):
         token = request.query_params.get("token")
@@ -408,11 +423,15 @@ class ConfirmEmailView(APIView):
                 {
                     "error": "Your confirmation link has expired.",
                     "resend": True,
-                    "email": signer.unsign(token, max_age=None)
+                    "email": signer.unsign(token, max_age=None),
                 },
             )
         except (BadSignature, User.DoesNotExist):
-            return render(request, "email_verified.html", {"error": "Invalid or broken confirmation link."})
+            return render(
+                request,
+                "email_verified.html",
+                {"error": "Invalid or broken confirmation link."},
+            )
 
 
 class ResendConfirmationView(APIView):
@@ -423,7 +442,11 @@ class ResendConfirmationView(APIView):
         try:
             user = User.objects.get(email=email)
             if user.is_active:
-                return render(request, "resend_success.html", {"error": "Account already activated."})
+                return render(
+                    request,
+                    "resend_success.html",
+                    {"error": "Account already activated."},
+                )
 
             token = signer.sign(user.email)
             confirm_url = f"{settings.FRONTEND_URL}/confirm-email/?token={token}"
@@ -432,7 +455,9 @@ class ResendConfirmationView(APIView):
 
             return render(request, "resend_success.html")
         except User.DoesNotExist:
-            return render(request, "resend_success.html", {"error": "Such User doesn't exist"})
+            return render(
+                request, "resend_success.html", {"error": "Such User doesn't exist"}
+            )
 
 
 class SendResetPasswordView(APIView):
@@ -449,13 +474,11 @@ class SendResetPasswordView(APIView):
             send_email(user, reset_url, "reset")
 
             return Response(
-                {"detail": "Reset Email sent to user"},
-                status=status.HTTP_200_OK
+                {"detail": "Reset Email sent to user"}, status=status.HTTP_200_OK
             )
         except User.DoesNotExist:
             return Response(
-                {"error": "Such User doesn't exist"},
-                status=status.HTTP_404_NOT_FOUND
+                {"error": "Such User doesn't exist"}, status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -468,9 +491,15 @@ class ResetPasswordView(APIView):
             email = signer.unsign(token, max_age=60 * 60)  # 1h validity
             return render(request, "reset_password.html", {"token": token})
         except SignatureExpired:
-            return render(request, "reset_password.html", {"error": "This reset link has expired."})
+            return render(
+                request,
+                "reset_password.html",
+                {"error": "This reset link has expired."},
+            )
         except BadSignature:
-            return render(request, "reset_password.html", {"error": "Invalid reset link."})
+            return render(
+                request, "reset_password.html", {"error": "Invalid reset link."}
+            )
 
     def post(self, request, *args, **kwargs):
         token = request.data.get("token")
@@ -483,7 +512,11 @@ class ResetPasswordView(APIView):
             user.save()
             return render(request, "reset_password_success.html")
         except (SignatureExpired, BadSignature, User.DoesNotExist):
-            return render(request, "reset_password.html", {"error": "Invalid or expired reset link."})
+            return render(
+                request,
+                "reset_password.html",
+                {"error": "Invalid or expired reset link."},
+            )
 
 
 class EmailTokenObtainPairView(TokenObtainPairView):
@@ -499,18 +532,13 @@ class ProfileView(APIView):
 
     def put(self, request):
         try:
-            serializer = UserSerializer(
-                request.user,
-                data=request.data,
-                partial=True
-            )
+            serializer = UserSerializer(request.user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
         except ValidationError as exc:
             logger.error(
-                f"Profile update failed for {request.user.email}",
-                exc_info=True
+                f"Profile update failed for {request.user.email}", exc_info=True
             )
             raise
 
@@ -523,10 +551,15 @@ class ProfileView(APIView):
             if user.has_usable_password():
                 if not user.check_password(serializer.validated_data["old_password"]):
                     logger.error(f"Wrong old password input")
-                    return Response({"old_password": "Wrong password"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"old_password": "Wrong password"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
             else:
-                logger.info("Skipping old password check because user has no usable password")
+                logger.info(
+                    "Skipping old password check because user has no usable password"
+                )
             user.set_password(serializer.validated_data["new_password"])
             user.save()
 
@@ -536,11 +569,13 @@ class ProfileView(APIView):
                 request.user.id,
                 "You successfully changed your password",
                 "success",
-                "Password Changed"
+                "Password Changed",
             )
 
             logger.info("Password changed successfully")
-            return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "Password updated successfully"}, status=status.HTTP_200_OK
+            )
 
         logger.error(f"Password wasn't changed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -551,7 +586,9 @@ class ProfileView(APIView):
         try:
             user.is_active = False
             logger.info("User 'deleted'(set to inactive) successfully")
-            return Response({"detail": "User deleted successfully"}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "User deleted successfully"}, status=status.HTTP_200_OK
+            )
         except Exception as e:
             logger.error(f"Error deleting user with id {user.id}: {e}")
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -572,12 +609,8 @@ class AdminAmbassadorView(ListAPIView):
     serializer_class = AdminUserSerializer
 
     def get_queryset(self):
-        return (
-            User.objects
-            .all()
-            .annotate(
-                is_invited_by_rm=F("invited_by_user__is_staff")
-            )
+        return User.objects.all().annotate(
+            is_invited_by_rm=F("invited_by_user__is_staff")
         )
 
 
@@ -598,10 +631,12 @@ class QrCodeView(APIView):
                 request.user.id,
                 "Ambassador QR Code generated successfully",
                 "success",
-                "QR Code Generated"
+                "QR Code Generated",
             )
 
-            logger.info(f"Ambassador QR Code generated successfully with qr id: {qr_id}")
+            logger.info(
+                f"Ambassador QR Code generated successfully with qr id: {qr_id}"
+            )
             return Response({"detail": "success"}, status=status.HTTP_200_OK)
         except Exception as e:
             logger.error(f"Error generating ambassador QR code: {e}")
@@ -612,13 +647,17 @@ class QrCodeView(APIView):
 
         qr_id = user.referral_qr_code_id
         if not qr_id:
-            return Response({"error": "No QR code found."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "No QR code found."}, status=status.HTTP_400_BAD_REQUEST
+            )
         qr_code_data = qrTigerAPI.get_qr_code_by_id(qr_id)
         return Response(qr_code_data, status=status.HTTP_200_OK)
 
 
 class StaffQrCodeView(APIView):
-    permission_classes = [IsStaffUser,]
+    permission_classes = [
+        IsStaffUser,
+    ]
 
     def post(self, request):
         user = request.user
@@ -630,13 +669,18 @@ class StaffQrCodeView(APIView):
             code_bundle_type = data["code_bundle_type"]
             if code_bundle_type not in ["Industry", "Affinity", "B2B"]:
                 logger.error(f"Wrong code bundle type: {code_bundle_type}")
-                return Response({"error": "code_bundle_type is not valid."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "code_bundle_type is not valid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             qr_url = None
             qr_frame_text = None
             if code_bundle_type == "Industry":
-                qr_url = (f"https://savefryoil.retool.com/embedded/public/98912f22-4534-4209-af8e-d6d4e16dc706"
-                          f"?referral_code={user.referral_code}")
+                qr_url = (
+                    f"https://savefryoil.retool.com/embedded/public/98912f22-4534-4209-af8e-d6d4e16dc706"
+                    f"?referral_code={user.referral_code}"
+                )
                 qr_frame_text = "Industry"
             if code_bundle_type == "Affinity":
                 qr_url = "https://savefryoil.retool.com/embedded/public/6330dac3-e5e7-428e-b675-66cf44e65c61"
@@ -647,7 +691,9 @@ class StaffQrCodeView(APIView):
 
             qr_name = f"Code Bundle {user.email}"
 
-            qr_id = qrTigerAPI.create_bundle_qr_code_with_name(qr_url, qr_frame_text, qr_name)
+            qr_id = qrTigerAPI.create_bundle_qr_code_with_name(
+                qr_url, qr_frame_text, qr_name
+            )
             bundle_dict = user.qr_code_bundles
             bundle_dict[code_bundle_type] = qr_id
             user.qr_code_bundles = bundle_dict
@@ -663,7 +709,10 @@ class StaffQrCodeView(APIView):
 
         qr_code_bundles_id = user.qr_code_bundles
         if not qr_code_bundles_id:
-            return Response({"error": "No QR code bundles found."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "No QR code bundles found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         qr_codes_data = {}
         for qr_name, qr_code_id in qr_code_bundles_id.items():
@@ -671,4 +720,3 @@ class StaffQrCodeView(APIView):
             qr_codes_data[qr_name] = qr_code_data
 
         return Response(qr_codes_data, status=status.HTTP_200_OK)
-

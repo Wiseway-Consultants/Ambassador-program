@@ -15,11 +15,11 @@ class EmailBackend(ModelBackend):
     def authenticate(self, request, **kwargs):
         user_model = get_user_model()
         try:
-            email = kwargs.get('email', None)
+            email = kwargs.get("email", None)
             if email is None:
-                email = kwargs.get('username', None)
+                email = kwargs.get("username", None)
             user = user_model.objects.get(email=email)
-            if user.check_password(kwargs.get('password', None)):
+            if user.check_password(kwargs.get("password", None)):
                 return user
         except user_model.DoesNotExist:
             return None
