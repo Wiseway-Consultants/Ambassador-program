@@ -1,25 +1,28 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 
-from .views import (EmailTokenObtainPairView,
-                    RegisterView,
-                    ProfileView,
-                    ConfirmEmailView,
-                    ResendConfirmationView,
-                    SendResetPasswordView,
-                    ResetPasswordView,
-                    QrCodeView,
-                    StaffQrCodeView,
-                    StaffAmbassadorView,
-                    AdminAmbassadorView,
-                    GoogleLoginView,
-                    AppleSignInView
-                    )
+from .views import (
+    EmailTokenObtainPairView,
+    RegisterView,
+    ProfileView,
+    ConfirmEmailView,
+    ResendConfirmationView,
+    SendResetPasswordView,
+    ResetPasswordView,
+    QrCodeView,
+    StaffQrCodeView,
+    StaffAmbassadorView,
+    AdminAmbassadorView,
+    GoogleLoginView,
+    AppleSignInView,
+    SaltTokenLoginView,
+)
 
 urlpatterns = [
-    path('oauth/google/', GoogleLoginView.as_view(), name='google-login'),
-    path('oauth/apple/', AppleSignInView.as_view(), name='apple-login'),
-    path('register/', RegisterView.as_view(), name='token_obtain_pair'),
+    path("oauth/salt_token/", SaltTokenLoginView.as_view(), name="salt-token-login"),
+    path("oauth/google/", GoogleLoginView.as_view(), name="google-login"),
+    path("oauth/apple/", AppleSignInView.as_view(), name="apple-login"),
+    path("register/", RegisterView.as_view(), name="token_obtain_pair"),
     path("auth/confirm-email/", ConfirmEmailView.as_view(), name="confirm-email"),
     path("auth/resend-confirmation/", ResendConfirmationView.as_view(), name="resend-confirm-email"),
     path("auth/reset-password/send/", SendResetPasswordView.as_view(), name="reset-password-send"),
