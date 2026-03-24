@@ -105,6 +105,7 @@ class User(AbstractUser):
     currency = models.CharField(_('currency'), max_length=3)
     organization_name = models.CharField(_('organization name'), max_length=128, blank=True, null=True)
     skip_invitation_code_input = models.BooleanField(default=False)
+    in_mail_chimp = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_accepted_terms = models.BooleanField(default=False)
