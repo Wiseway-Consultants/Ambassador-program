@@ -322,7 +322,7 @@ class RegisterView(APIView):
         logger.info(f"Received Registration request with payload: {request.data}")
 
         serializer = UserSerializer(data=request.data)
-        if not serializer.is_valid():
+        if not serializer.is_valid(raise_exception=True):
             logger.error(f"serializer error {serializer.errors}")
             send_telegram_notification(
                 f"Error Ambassador Registration {serializer.errors}"
