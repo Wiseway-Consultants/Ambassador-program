@@ -26,6 +26,7 @@ class MailChimpAPI:
                 "merge_fields": {
                     "FNAME": user.first_name,
                     "LNAME": user.last_name,
+                    "PHONE": user.phone
                 },
             }
             req = requests.post(
