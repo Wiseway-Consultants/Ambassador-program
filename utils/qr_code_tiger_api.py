@@ -71,10 +71,10 @@ class QRCodeTigerAPI:
         return data
 
     @staticmethod
-    def prepare_static_qr_code_payload(qr_url):
+    def prepare_static_qr_code_payload(qr_url, color):
         data = {
             "size": 500,
-            "colorDark": "rgb(0,0,0)",
+            "colorDark": color,
             "colorType": "SINGLE_COLOR",
             "logo": "https://media.qrtiger.com/images/2025/09/logo-(1)_82.png",
             "eye_outer": "eyeOuter2",
@@ -123,11 +123,11 @@ class QRCodeTigerAPI:
         )
         return response.json()["qrId"]
 
-    def create_static_qr_code(self, url):
+    def create_static_qr_code(self, url, color: str = "rgb(0,0,0)"):
         response = requests.post(
             self.BASE_URL + "qr/static",
             headers=self.HEADERS,
-            json=self.prepare_static_qr_code_payload(url)
+            json=self.prepare_static_qr_code_payload(url, color)
         )
         return response.json()
 

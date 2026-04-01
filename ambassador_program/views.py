@@ -57,7 +57,11 @@ class QRCodeView(APIView):
 
             data = request.data
             qr_url = data["qr_url"]
-            qr_code_data = qrTigerAPI.create_static_qr_code(qr_url)
+            color = data.get("color")
+            qr_code_data = qrTigerAPI.create_static_qr_code(qr_url, color)
+            logger.info(
+                f"QR Code created successfully. QR Code URL: {qr_url}"
+            )
             return Response(qr_code_data, status=200)
 
         except Exception as e:
