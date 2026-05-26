@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Your Account Is Ready</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: #FBF6E9;
+      font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+      font-weight: 400;
+      color: #2C2407;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .email-wrapper {
+      background-color: #FBF6E9;
+      padding: 48px 16px;
+    }
+
+    .email-container {
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-img {
+      height: 52px;
+      width: auto;
+      display: inline-block;
+    }
+
+    /* Main card */
+    .card {
+      background-color: #FFFDF5;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 28px rgba(180,140,0,0.13);
+    }
+
+    /* Hero band */
+    .card-hero {
+      background-color: #E8A800;
+      background-image: linear-gradient(135deg, #F5BC00 0%, #D49200 100%);
+      padding: 40px 48px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-hero::before {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.10);
+    }
+
+    .card-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -40px;
+      left: 30px;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.07);
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(44,36,7,0.65);
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 34px;
+      line-height: 1.15;
+      color: #2C2407;
+      margin-bottom: 4px;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: #6B4800;
+    }
+
+    /* Card body */
+    .card-body {
+      padding: 40px 48px;
+    }
+
+    .greeting {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #4A3D10;
+      margin-bottom: 28px;
+    }
+
+    /* Credentials box */
+    .credentials-block {
+      background-color: #FFF8D6;
+      border: 1px solid #F0D96A;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-bottom: 32px;
+    }
+
+    .credentials-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #B08A00;
+      margin-bottom: 16px;
+    }
+
+    .credential-row {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .credential-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .credential-key {
+      font-size: 12px;
+      font-weight: 600;
+      color: #B08A00;
+      min-width: 68px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .credential-value {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: #2C2407;
+      background-color: #FDE97A;
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .credential-value.password {
+      color: #7A4F00;
+      letter-spacing: 2px;
+    }
+
+    /* Action label */
+    .action-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+      color: #B08A00;
+      margin-bottom: 16px;
+    }
+
+    /* CTA Button */
+    .btn-primary {
+      display: block;
+      background-color: #E8A800;
+      background-image: linear-gradient(135deg, #F5BC00 0%, #D49200 100%);
+      color: #2C2407 !important;
+      text-decoration: none;
+      text-align: center;
+      font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding: 16px 32px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+
+    .btn-secondary {
+      display: block;
+      background-color: transparent;
+      color: #2C2407 !important;
+      text-decoration: none;
+      text-align: center;
+      font-family: 'DM Sans', Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      padding: 14px 32px;
+      border-radius: 10px;
+      border: 1.5px solid #E8C84A;
+      margin-bottom: 12px;
+    }
+
+    .btn-icon {
+      margin-right: 8px;
+    }
+
+    /* Security notice */
+    .notice {
+      background-color: #FFFBEA;
+      border: 1px solid #F0D96A;
+      border-left: 3px solid #D49200;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 28px;
+    }
+
+    .notice p {
+      font-size: 12.5px;
+      line-height: 1.6;
+      color: #7A5200;
+    }
+
+    .notice strong {
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .card-footer {
+      border-top: 1px solid #F0E080;
+      padding: 24px 48px;
+      background-color: #FDF9E8;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: #B08A00;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .footer-text a {
+      color: #7A5200;
+      text-decoration: none;
+    }
+
+    /* Below card */
+    .below-card {
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    .below-card p {
+      font-size: 12px;
+      color: #B08A00;
+      line-height: 1.7;
+    }
+
+    .below-card a {
+      color: #7A5200;
+      text-decoration: none;
+    }
+
+    /* Responsive */
+    @media only screen and (max-width: 600px) {
+      .card-hero { padding: 32px 28px; }
+      .card-body { padding: 32px 28px; }
+      .card-footer { padding: 20px 28px; }
+      .hero-title { font-size: 28px; }
+      .credential-row { flex-direction: column; gap: 4px; }
+    }
+  </style>
+</head>
+<body>
+<div class="email-wrapper">
+  <div class="email-container">
+
+    <!-- Logo -->
+    <div class="header">
+      <img src="https://api.savefryoil.com/static/sfo_logo.png" alt="Save Fry Oil" class="logo-img" />
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+
+      <!-- Hero -->
+      <div class="card-hero">
+        <p class="hero-eyebrow">Account Ready</p>
+        <h1 class="hero-title">Welcome aboard,<br><em>{{user.first_name}}.</em></h1>
+      </div>
+
+      <!-- Body -->
+      <div class="card-body">
+
+        <p class="greeting">
+          Your account has been set up and is ready to use. Below you'll find your login credentials — keep them somewhere safe. You can sign in right away using the button below.
+        </p>
+
+        <!-- Credentials -->
+        <div class="credentials-block">
+          <p class="credentials-label">Your Credentials</p>
+
+          <div class="credential-row">
+            <span class="credential-key">Email</span>
+            <span class="credential-value">{{user.email}}</span>
+          </div>
+
+          <div class="credential-row">
+            <span class="credential-key">Password</span>
+            <span class="credential-value password">{{password}}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <p class="action-label">Get Started</p>
+
+        <a href="{{SIGN_IN_URL}}" class="btn-primary">
+          <span class="btn-icon">→</span> Sign In to Your Account
+        </a>
+
+        <a href="{{SOP_URL}}" class="btn-secondary">
+          <span class="btn-icon">📖</span> Read the Getting Started Guide
+        </a>
+
+      </div>
+      <!-- /card-body -->
+
+      <!-- Footer -->
+      <div class="card-footer">
+        <p class="footer-text">
+          Questions? Reach us at <a href="mailto:vlad@savefryoil.com">vlad@savefryoil.com</a><br>
+          &copy; 2026 Save Fry Oil &nbsp;·&nbsp; <a href="https://savefryoil.com/privacy-policy/">Privacy Policy</a>
+        </p>
+      </div>
+
+    </div><!-- /card -->
+
+    <!-- Below card note -->
+    <div class="below-card">
+      <p>
+        This email was sent to <strong>{{user.email}}</strong>.<br>
+        If you have trouble with the button above, copy and paste this link:<br>
+        <a href="{{SIGN_IN_URL}}">{{SIGN_IN_URL}}</a>
+      </p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
