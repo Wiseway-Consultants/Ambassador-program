@@ -4,10 +4,9 @@ from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.conf import settings
 
+FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
 
 def send_email(user, url, email_type: str = "confirm"):
-
-    from_email = settings.DEFAULT_FROM_EMAIL
     to = [user.email]
 
     if email_type == 'confirm':
@@ -56,16 +55,14 @@ def send_email(user, url, email_type: str = "confirm"):
             }
         )
     # Build email
-    email = EmailMessage(subject, html_content, from_email, to)
+    email = EmailMessage(subject, html_content, FROM_EMAIL, to)
     email.content_subtype = "html"  # Important → tells Django it's HTML
     email.send()
 
 
 def send_notification_email(to_user, notification_object, notification_type):
 
-    from_email = settings.DEFAULT_FROM_EMAIL
     to = [to_user.email]
-
     if notification_type == "user":
         subject = "New Ambassador registered by you referral code"
         html_content = render_to_string(
@@ -86,6 +83,18 @@ def send_notification_email(to_user, notification_object, notification_type):
             }
         )
     # Build email
-    email = EmailMessage(subject, html_content, from_email, to)
+    email = EmailMessage(subject, html_content, FROM_EMAIL, to)
     email.content_subtype = "html"  # Important → tells Django it's HTML
+    email.send()
+
+def send_html_email(recipients: list, subject: str, email_body: dict, template_name: str):
+    to = recipients
+
+    html_content = render_to_string(
+        template_name=template_name,
+        context=email_body
+    )
+    # Build email
+    email = EmailMessage(subject, html_content, FROM_EMAIL, to)
+    email.content_subtype = "html"
     email.send()
