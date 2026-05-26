@@ -10,7 +10,7 @@ from django.db.models import F
 from django.shortcuts import render
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -33,7 +33,7 @@ from .serializers import (
     ChangePasswordSerializer,
     AdminUserSerializer,
 )
-from utils.send_email import send_email, send_notification_email
+from utils.send_email import send_email, send_notification_email, send_html_email
 
 User = get_user_model()
 signer = TimestampSigner()
@@ -314,11 +314,54 @@ class AppleSignInView(APIView):
         return decoded
 
 
+class UserCreateByAdmin(APIView):
+    http_method_names = ["post"]
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        logger.debug(f"Received request to create User by Admin: {data}")
+        serializer = UserSerializer(data=data)
+        if not serializer.is_valid(raise_exception=True):
+            logger.error(f"serializer error {serializer.errors}")
+            send_telegram_notification(
+                f"Error Ambassador Registration {serializer.errors}"
+            )
+            return Response(
+                {"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            validated_data = serializer.validated_data
+            password = validated_data.pop("password", None)
+            user = User.objects.create_user(
+                **validated_data, password=password, is_active=True
+            )
+
+            send_html_email(
+                recipients=[user.email, "vlad@savefryoil.com"],
+                subject="Your SFO Ambassador Account is ready",
+                email_body={
+                    "user": user,
+                    "password": password,
+                    "SIGN_IN_URL": "https://savefryoil.com/ambassador-referrals/login",
+                    "SOP_URL": "" #TODO add SOP URL
+                },
+                template_name="emails/user_create_by_admin.html"
+            )
+
+        return Response(
+            {
+                "detail": "Account created. User will receive an email with credentials"
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+
 class RegisterView(APIView):
     http_method_names = ["post"]
 
     def post(self, request, *args, **kwargs):
-
         logger.info(f"Received Registration request with payload: {request.data}")
 
         serializer = UserSerializer(data=request.data)
