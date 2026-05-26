@@ -16,6 +16,7 @@ from .views import (
     GoogleLoginView,
     AppleSignInView,
     SaltTokenLoginView,
+    UserCreateByAdmin,
 )
 
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     path("oauth/google/", GoogleLoginView.as_view(), name="google-login"),
     path("oauth/apple/", AppleSignInView.as_view(), name="apple-login"),
     path("register/", RegisterView.as_view(), name="token_obtain_pair"),
+    path("create/", UserCreateByAdmin.as_view(), name="create_user_by_admin"),
     path("auth/confirm-email/", ConfirmEmailView.as_view(), name="confirm-email"),
     path(
         "auth/resend-confirmation/",
