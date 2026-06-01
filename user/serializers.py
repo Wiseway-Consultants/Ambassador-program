@@ -27,6 +27,7 @@ class UserSerializer(serializers.ModelSerializer):
     )
     invited_by_user = InvitedByUserSerializer(read_only=True)
     invited_by_user_id = serializers.IntegerField(write_only=True, required=False)
+    preferred_guides = serializers.CharField(write_only=True, required=False, default="Web Portal")
 
     has_usable_password = serializers.SerializerMethodField()
 
@@ -48,7 +49,8 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "is_superuser",
             "has_usable_password",
-            "skip_invitation_code_input"
+            "skip_invitation_code_input",
+            "preferred_guides"
         )
 
         read_only_fields = ("id", "is_staff", "is_superuser", "has_usable_password")
