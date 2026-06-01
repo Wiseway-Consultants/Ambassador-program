@@ -321,7 +321,6 @@ class UserCreateByAdmin(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         logger.debug(f"Received request to create User by Admin: {data}")
-        preferred_guides = data.pop("preferred_guides")
         serializer = UserSerializer(data=data)
         if not serializer.is_valid(raise_exception=True):
             logger.error(f"serializer error {serializer.errors}")
@@ -334,6 +333,7 @@ class UserCreateByAdmin(APIView):
 
         with transaction.atomic():
             validated_data = serializer.validated_data
+            preferred_guides = validated_data.pop("preferred_guides", None)
             password = validated_data.pop("password", None)
             user = User.objects.create_user(
                 **validated_data, password=password, is_active=True
