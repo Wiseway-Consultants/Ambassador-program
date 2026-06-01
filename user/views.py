@@ -321,6 +321,7 @@ class UserCreateByAdmin(APIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         logger.debug(f"Received request to create User by Admin: {data}")
+        preferred_guides = data.pop("preferred_guides")
         serializer = UserSerializer(data=data)
         if not serializer.is_valid(raise_exception=True):
             logger.error(f"serializer error {serializer.errors}")
@@ -337,6 +338,10 @@ class UserCreateByAdmin(APIView):
             user = User.objects.create_user(
                 **validated_data, password=password, is_active=True
             )
+            if preferred_guides == "Web Portal":
+                sop_url = "https://savefryoil.com/sop/ambassador-referral/ambassador-guide/"
+            else:
+                sop_url = "https://savefryoil.com/sop/ambassador-referral/mobile/ambassador-guide/"
 
             send_html_email(
                 recipients=[user.email, "vlad@savefryoil.com"],
@@ -345,7 +350,7 @@ class UserCreateByAdmin(APIView):
                     "user": user,
                     "password": password,
                     "SIGN_IN_URL": "https://savefryoil.com/ambassador-referrals/login",
-                    "SOP_URL": "" #TODO add SOP URL
+                    "SOP_URL": sop_url
                 },
                 template_name="emails/user_create_by_admin.html"
             )
