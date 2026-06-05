@@ -16,6 +16,9 @@ class MailChimpAPI:
     def add_contact_to_audience(
         self, user: User
     ):
+        if "test" in [user.email, user.first_name, user.last_name]:
+            logger.warning(f"Skipping adding user to Mailchimp due to test: {user.email}")
+            return
         try:
             payload = {
                 "language": "en",
