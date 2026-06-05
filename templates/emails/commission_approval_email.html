@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commission Approval Required</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 40px; text-align: center;">
+                            <p style="margin: 0 0 10px; color: rgba(255,255,255,0.85); font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Action Required</p>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: bold;">Commission Approval Needed 🔔</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 25px; color: #333333; font-size: 16px; line-height: 1.6;">
+                                Ambassador <strong>{{ claiming_ambassador.first_name }} {{ claiming_ambassador.last_name }}</strong> has submitted a commission claim for prospect <strong>{{ prospect.first_name }} {{ prospect.last_name }}</strong>. Please review the commissions below and approve or reject them.
+                            </p>
+
+                            <!-- Prospect Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 0 0 25px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; color: #667eea; font-size: 18px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Prospect Details</h2>
+                                        <table width="100%" cellpadding="8" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold; width: 45%;">Contact Name:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ prospect.contact_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Restaurant / Organisation:</td>
+                                                <td style="color: #333333; font-size: 14px;"><strong style="color: #667eea;">{{ prospect.restaurant_organisation_name }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Number of Frylows:</td>
+                                                <td style="color: #333333; font-size: 14px;"><strong>{{ number_of_frylows }}</strong></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Claimed On:</td>
+                                                <td style="color: #333333; font-size: 14px;">{{ claimed_at }}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Commission Chain -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 0 0 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; color: #667eea; font-size: 18px; border-bottom: 2px solid #667eea; padding-bottom: 10px;">Commissions to Approve</h2>
+
+                                        <!-- Table Header -->
+                                        <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+                                            <tr style="background-color: #667eea;">
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px; border-radius: 4px 0 0 0;">Ambassador</td>
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px;">Level</td>
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px;">Type</td>
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px; border-radius: 0 4px 0 0; text-align: right;">Amount</td>
+                                            </tr>
+                                            {% for commission in commissions %}
+                                            <tr style="background-color: {% if forloop.counter|divisibleby:2 %}#ffffff{% else %}#f8f9fa{% endif %}; border-bottom: 1px solid #e9ecef;">
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px;">
+                                                    {{ commission.user.first_name }} {{ commission.user.last_name }}<br>
+                                                    <span style="color: #999999; font-size: 12px;">{{ commission.user.email }}</span>
+                                                </td>
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px;">{{ commission.commission_tree_level }}</td>
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px;">
+                                                    {% if commission.commission_tree_level == 0 %}
+                                                    <span style="display: inline-block; background-color: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: bold;">Direct Sale</span>
+                                                    {% else %}
+                                                    <span style="display: inline-block; background-color: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: bold;">Team Reward</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px; text-align: right;"><strong>{{ commission.currency }} {{ commission.money_amount }}</strong></td>
+                                            </tr>
+                                            {% endfor %}
+                                        </table>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 10px 0 30px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://savefryoil.com/ambassador-referrals/claimed-commissions/" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
+                                            Review & Approve Commissions →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                Please log in to the admin panel to approve or reject these commissions.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 40px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                                This is an automated notification from your Ambassador Management System.<br>
+                                © 2026 Save Fry Oil. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
