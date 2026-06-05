@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from django.core.mail import EmailMessage
@@ -5,6 +6,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
+logger = logging.getLogger(__name__)
 
 def send_email(user, url, email_type: str = "confirm"):
     to = [user.email]
@@ -97,4 +99,5 @@ def send_html_email(recipients: list, subject: str, email_body: dict, template_n
     # Build email
     email = EmailMessage(subject, html_content, FROM_EMAIL, to)
     email.content_subtype = "html"
+    logger.debug(f"Send email to: {to}, template: {template_name}")
     email.send()
