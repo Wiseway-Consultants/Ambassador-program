@@ -47,7 +47,7 @@ class CommissionStripePayoutSerializer(serializers.Serializer):
         if commission.paid:
             raise serializers.ValidationError(f"Commission with id {value} is already paid.")
         if not commission.user.stripe_onboard_status:
-            raise serializers.ValidationError(f"This ambassador is not onboarded for Stripe payouts.")
+            raise serializers.ValidationError(f"You're not onboarded for Stripe payouts.")
         if not commission.admin_approve:
-            raise serializers.ValidationError(f"Commission isn't approved")
+            raise serializers.ValidationError(f"Commission isn't approved by SFO admins")
         return value
