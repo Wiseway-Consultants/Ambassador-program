@@ -13,7 +13,6 @@ class Prospect(models.Model):
     restaurant_organisation_name = models.CharField(max_length=64)
     ghl_location_id = models.CharField(max_length=32, blank=True, null=True)
     ghl_contact_id = models.CharField(max_length=32, blank=True, null=True)
-    ghl_opportunity_id = models.CharField(max_length=32, blank=True, null=True)
     deal_completed = models.BooleanField(default=False)
     claimed = models.BooleanField(default=False)
     invited_by_user = models.ForeignKey(
