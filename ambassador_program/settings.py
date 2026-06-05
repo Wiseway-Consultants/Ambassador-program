@@ -126,6 +126,9 @@ DATABASES = {
         "PASSWORD": getenv("POSTGRES_PASSWORD"),
         "HOST": getenv("POSTGRES_HOST", "127.0.0.1"),
         "PORT": getenv("POSTGRES_PORT", "5432"),
+        "OPTIONS": {
+            "options": f"-c search_path={getenv('POSTGRES_SCHEMA', 'sfo_ambassador')}"
+        }
     }
 }
 
