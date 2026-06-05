@@ -19,7 +19,6 @@ class ProspectSerializer(serializers.ModelSerializer):
             "restaurant_organisation_name",
             "invited_by_user",
             "ghl_contact_id",
-            "ghl_opportunity_id",
             "deal_completed",
             "claimed",
             "created_at"
@@ -29,6 +28,5 @@ class ProspectSerializer(serializers.ModelSerializer):
             "deal_completed",
             "created_at",
             "ghl_contact_id",
-            "ghl_opportunity_id",
             "claimed"
         )
