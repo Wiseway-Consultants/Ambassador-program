@@ -37,7 +37,9 @@ ALLOWED_HOSTS = [
     "0.0.0.0",
     "127.0.0.1",
     "dev",
-    "prod"
+    "prod",
+    "ambassador-dev",
+    "ambassador-prod"
 ]
 
 USE_X_FORWARDED_HOST = True
