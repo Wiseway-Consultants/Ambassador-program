@@ -16,6 +16,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      refresher:
+        condition: service_started
 
   prod:
     networks:
@@ -30,6 +32,8 @@ services:
       - .env
     depends_on:
       redis:
+        condition: service_started
+      refresher:
         condition: service_started
     restart: always
     volumes:
