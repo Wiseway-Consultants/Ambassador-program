@@ -23,31 +23,6 @@ def check_auth_key(headers):
     if "x-api-key" not in headers or headers["x-api-key"] != settings.ADMIN_API_KEY:
         raise PermissionError("Not Authorized")
 
-
-class GHLview(APIView):
-    def get(self, request):
-        headers = request.headers
-        try:
-            check_auth_key(headers)
-            GHL_API.refresh_agency_token()
-            return Response("OK", status=200)
-        except Exception as e:
-            return Response(f"Error: {e}", status=400)
-
-    def post(self, request):
-        headers = request.headers
-        try:
-            check_auth_key(headers)
-            data = request.data
-            location_id = data["location_id"]
-            location_access_token = GHL_API.get_location_access_token(location_id)
-            return Response({"access_token": location_access_token}, status=200)
-
-        except Exception as e:
-            logger.error(f"Error with GHL admin token: {e}")
-            return Response(f"Error: {e}", status=400)
-
-
 class QRCodeView(APIView):
 
     def post(self, request):
