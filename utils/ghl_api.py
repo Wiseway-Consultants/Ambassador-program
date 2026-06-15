@@ -8,6 +8,7 @@ import requests
 
 CLIENT_ID = getenv("CLIENT_ID")
 CLIENT_SECRET = getenv("CLIENT_SECRET")
+SFO_BACKEND_API_KEY = getenv("SFO_BACKEND_API_KEY")
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ class GoHighLevelAPI:
             "Authorization": "Bearer ",
         }
         self.base_url = "https://services.leadconnectorhq.com"
-        self.auth_file_path = Path(BASE_DIR, "auth", "ghl_jwt_auth.json")
         self.country_to_locationID = {
             "GB": "dNMN3zCANRj6BuScTLfC",
             "AU": "4Nh160QNZTSu12oiCecp",
@@ -30,14 +30,6 @@ class GoHighLevelAPI:
             "IE": "rfqijwLULaFKIg2m0oP3",
             "NZ": "jQZrYYLodjByNxqCrehy",
             "US": "EhYpQQPMMPBIvrlubdE4"
-        }
-        self.get_pipelineId_by_locationId = {
-            "dNMN3zCANRj6BuScTLfC": "48oHU0QTQcxSoIl8cuBu",  # GB
-            "4Nh160QNZTSu12oiCecp": "ZQBFmmJetqVtoDl3y73p",  # AU
-            "tRAT9Du0M1EoncfpfJux": "pSpfLXy4c55vJJzc1431",  # CA
-            "rfqijwLULaFKIg2m0oP3": "Z34If6HGBJc2J20jqbBz",  # IE
-            "jQZrYYLodjByNxqCrehy": "ikwZZCZHHgT4pp3AVN5g",  # NZ
-            "EhYpQQPMMPBIvrlubdE4": "zqaVu9yon8yO4QMyr81A",  # US
         }
 
     @staticmethod
@@ -48,90 +40,20 @@ class GoHighLevelAPI:
             "Authorization": f"Bearer {access_token}",
         }
 
-    def refresh_agency_token(self):
-        try:
-            logger.info("Refreshing agency token")
-            with open(self.auth_file_path, "r") as file:
-                tokens = json.load(file)
-            response = requests.post(
-                url=f"{self.base_url}/oauth/token",
-                headers={
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Accept": "application/json"
-                },
-                data={
-                    "client_id": CLIENT_ID,
-                    "client_secret": CLIENT_SECRET,
-                    "grant_type": "refresh_token",
-                    "refresh_token": tokens["refresh_token"]
-                }
-            )
-            if response.status_code == 200:
-                with open(self.auth_file_path, "w") as file:
-                    tokens["access_token"] = response.json()["access_token"]
-                    tokens["expires_in"] = response.json()["expires_in"]
-                    tokens["refresh_token"] = response.json()["refresh_token"]
-                    tokens["refreshed_at"] = datetime.now().strftime('%Y-%m-%d %H:%M')
-                    json.dump(tokens, file, indent=4)
-                logger.info("AUTH TOKEN REFRESHED SUCCESSFULLY ^_^")
-            else:
-                logger.error(f"error [{response.status_code}]:\n {response.content}")
+    @staticmethod
+    def get_location_access_token(location_id):
+        response = requests.post(
+            url=f"https://api.savefryoil.com/ghl/token",
+            headers={
+                "x-api-key": SFO_BACKEND_API_KEY
+            },
+            json={
+                "location_id": location_id,
+            }
+        )
+        logger.info(f"Sent request to retrieve location token")
+        return response.json()
 
-        except Exception as ex:
-            logger.error('REFRESHER ERROR: ', ex)
-
-    def get_location_access_token(self, location_id):
-        location_auth_path = Path(BASE_DIR, "auth", f"{location_id}_auth.json")
-        if not location_auth_path.exists():
-            location_auth_path.touch(exist_ok=True)
-            logger.info(f"Created auth token file for location {location_id}")
-
-        try:
-            with open(location_auth_path, "r") as f:
-                location_auth = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            location_auth = {}
-        if location_auth.get("access_token") and location_auth.get("refreshed_at") and location_auth.get("expires_in"):
-            refreshed_at = datetime.strptime(location_auth["refreshed_at"], "%Y-%m-%d %H:%M")  # 2000-11-06 15:35
-            token_expires_in_seconds = int(location_auth["expires_in"])  # 86400 = 24hours;
-            expires_at_datetime = refreshed_at + timedelta(seconds=token_expires_in_seconds)  # 2000-11-07 15:35
-
-            if datetime.now() < expires_at_datetime - timedelta(hours=4):  # add 4Hours buffer to prevent timezone error
-                logger.info(f"Using cached token for location {location_id}")
-                return location_auth["access_token"]
-
-        # Location token expired - refreshing
-        with open(self.auth_file_path, "r") as file:
-            logger.info(f"Reading agency auth token for location {location_id}")
-            tokens = json.load(file)
-            agency_access_token = tokens["access_token"]
-            response = requests.post(
-                url=f"{self.base_url}/oauth/locationToken",
-                headers={
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Accept": "application/json",
-                    "Version": "2021-07-28",
-                    "Authorization": f"Bearer {agency_access_token}"
-                },
-                data={
-                    "locationId": location_id,
-                    "companyId": tokens["companyId"]
-                }
-            )
-            logger.info(f"Sent request to retrieve location token")
-            if response.status_code == 201:
-                data = response.json()
-                with open(location_auth_path, "w") as location_auth_file:
-                    location_auth_data = {
-                        "access_token": data["access_token"],
-                        "expires_in": data["expires_in"],
-                        "refreshed_at": datetime.now().strftime('%Y-%m-%d %H:%M')
-                    }
-                    json.dump(location_auth_data, location_auth_file, indent=4)
-                logger.info("Location TOKEN REFRESHED SUCCESSFULLY ^_^")
-            else:
-                logger.error(f"error [{response.status_code}]:\n {response.content}")
-            return data["access_token"]
 
     def create_contact(self, data, location_id):
         try:
@@ -151,25 +73,6 @@ class GoHighLevelAPI:
             return response
         except Exception as ex:
             logger.error(f"Error creating contact: {ex}")
-            raise ex
-
-    def create_opportunity(self, data, location_id):
-        try:
-            access_token = self.get_location_access_token(location_id)
-            pipeline_id = self.get_pipelineId_by_locationId[location_id]
-
-            # Insert dynamic ids to request's body
-            data["pipelineId"] = pipeline_id
-            data["locationId"] = location_id
-
-            request = requests.post(
-                f"{self.base_url}/opportunities/",
-                headers=self.create_headers(access_token),
-                json=data
-            )
-            return request.json()
-        except Exception as ex:
-            logger.error(f"Error creating opportunity: {ex}")
             raise ex
 
 
