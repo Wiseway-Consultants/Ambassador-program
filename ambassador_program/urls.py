@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
 
-from ambassador_program.views import openapi_yaml, GHLview, QRCodeView, GetUserByEmailView
+from ambassador_program.views import openapi_yaml, QRCodeView, GetUserByEmailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,7 +29,6 @@ urlpatterns = [
     path('prospects/', include('prospect.urls')),
     path('commission/', include('commission.urls')),
     path('stripe/', include('user.stripe_urls')),
-    path('ghl/token/', GHLview.as_view(), name='ghl-token'),
     path('api/schema.yaml', openapi_yaml, name='custom-schema'),
     path(
         'api/redoc/',
