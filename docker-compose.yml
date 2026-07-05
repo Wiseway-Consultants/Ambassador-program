@@ -16,8 +16,6 @@ services:
     depends_on:
       redis:
         condition: service_started
-      refresher:
-        condition: service_started
 
   prod:
     networks:
@@ -33,8 +31,6 @@ services:
     depends_on:
       redis:
         condition: service_started
-      refresher:
-        condition: service_started
     restart: always
     volumes:
       - .:/app
@@ -47,22 +43,6 @@ services:
       - "6379:6379"
     networks:
       - shared_network
-
-
-  refresher:
-    networks:
-      - shared_network
-    container_name:
-      ambassador_schedule-tasks
-    build:
-      context: .
-      dockerfile: ./refresher_Dockerfile
-    command: python schedule_tasks.py
-    env_file:
-      - .env
-    restart: always
-    volumes:
-      - ./:/app
 
 volumes:
   postgres_data:
