@@ -100,7 +100,7 @@ class User(AbstractUser):
 
     email = models.EmailField(_('email address'), unique=True)
     first_name = models.CharField(_('first name'), max_length=30, validators=[validate_human_name])
-    last_name = models.CharField(_('last name'), max_length=30, validators=[validate_human_name])
+    last_name = models.CharField(_('last name'), max_length=30, validators=[validate_human_name], blank=True, null=True)
     phone = models.CharField(_('phone number'), max_length=30, blank=True)
     currency = models.CharField(_('currency'), max_length=3)
     organization_name = models.CharField(_('organization name'), max_length=128, blank=True, null=True)
