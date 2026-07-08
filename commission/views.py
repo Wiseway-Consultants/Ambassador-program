@@ -1,4 +1,3 @@
-import logging
 from log.logger_config import logger
 from datetime import datetime
 
