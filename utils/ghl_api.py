@@ -1,5 +1,5 @@
 import json
-import logging
+from log.logger_config import logger
 from datetime import datetime, timedelta
 from os import getenv
 from pathlib import Path
@@ -10,7 +10,7 @@ CLIENT_ID = getenv("CLIENT_ID")
 CLIENT_SECRET = getenv("CLIENT_SECRET")
 SFO_BACKEND_API_KEY = getenv("SFO_BACKEND_API_KEY")
 
-logger = logging.getLogger(__name__)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

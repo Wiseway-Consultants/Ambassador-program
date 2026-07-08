@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 from os import path
 
 from django.conf import settings
@@ -9,8 +9,6 @@ from rest_framework.views import APIView
 
 from utils.ghl_api import GHL_API
 from utils.qr_code_tiger_api import qrTigerAPI
-
-logger = logging.getLogger(__name__)
 
 
 def openapi_yaml(request):

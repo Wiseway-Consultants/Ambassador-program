@@ -1,5 +1,5 @@
-import logging
 import uuid
+from log.logger_config import logger
 
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
@@ -11,8 +11,6 @@ from notifications.utils import send_notification
 from prospect.models import Prospect
 from utils.send_email import send_notification_email
 from utils.validators import validate_human_name
-
-logger = logging.getLogger(__name__)
 
 
 class CustomUserManager(BaseUserManager):

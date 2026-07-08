@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 
 import requests
 from channels.layers import get_channel_layer
@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from notifications.models import Notification, PushNotificationDeviceToken
 
 load_dotenv()
-logger = logging.getLogger(__name__)
 
 
 def send_push_notification(push_token, title, message, data=None):

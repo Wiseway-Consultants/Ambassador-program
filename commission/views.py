@@ -1,4 +1,6 @@
 import logging
+from log.logger_config import logger
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -16,8 +18,8 @@ from prospect.models import Prospect
 from prospect.permissions import IsSuperUser
 from prospect.utils import get_invitation_user_chain_from_prospect, get_currency_by_country_code
 from prospect.validation import validate_prospect, ValidationError
+from utils.send_email import send_html_email
 
-logger = logging.getLogger(__name__)
 
 DIRECT_SALE_AMOUNT = 50
 TOTAL_TEAM_REWARD_AMOUNT = 75

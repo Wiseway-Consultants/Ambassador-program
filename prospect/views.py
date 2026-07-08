@@ -1,5 +1,5 @@
 import base64
-import logging
+from log.logger_config import logger
 
 from django.db.models import Q
 from rest_framework import status
@@ -24,7 +24,6 @@ from cryptography.exceptions import InvalidSignature
 from utils.send_email import send_notification_email
 from utils.send_telegram_notification import send_telegram_notification
 
-logger = logging.getLogger(__name__)
 
 
 class ProspectView(APIView):

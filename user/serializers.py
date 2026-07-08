@@ -1,11 +1,8 @@
-import logging
+from log.logger_config import logger
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
-
-
-logger = logging.getLogger(__name__)
 
 
 class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):

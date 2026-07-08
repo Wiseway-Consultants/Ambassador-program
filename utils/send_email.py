@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 from datetime import datetime
 
 from django.core.mail import EmailMessage
@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 from django.conf import settings
 
 FROM_EMAIL = settings.DEFAULT_FROM_EMAIL
-logger = logging.getLogger(__name__)
+
 
 def send_email(user, url, email_type: str = "confirm"):
     to = [user.email]

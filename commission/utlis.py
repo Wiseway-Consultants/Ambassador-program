@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 
 import requests
 import stripe
@@ -10,7 +10,6 @@ from user.models import User
 
 STRIPE_SECRET_KEY = settings.STRIPE_SECRET_KEY
 stripe.api_key = STRIPE_SECRET_KEY
-logger = logging.getLogger(__name__)
 
 STRIPE_FINANCIAL_ACCOUNT = settings.STRIPE_FINANCIAL_ACCOUNT
 STRIPE_FINANCIAL_ACCOUNT_CURRENCY = settings.STRIPE_FINANCIAL_ACCOUNT_CURRENCY

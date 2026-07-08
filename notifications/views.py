@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 from datetime import timedelta
 
 from django.utils import timezone
@@ -9,8 +9,6 @@ from rest_framework.views import APIView
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer, PushNotificationDeviceTokenSerializer
 from ambassador_program.views import check_auth_key
-
-logger = logging.getLogger(__name__)
 
 
 class NotificationView(APIView):

@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 import requests
 import jwt
 from jwt.algorithms import RSAAlgorithm
@@ -38,8 +38,6 @@ from utils.send_email import send_email, send_notification_email, send_html_emai
 User = get_user_model()
 signer = TimestampSigner()
 SALT_LOGIN_SECRET = settings.SALT_LOGIN_SECRET
-
-logger = logging.getLogger(__name__)
 
 
 class SaltTokenLoginView(APIView):

@@ -1,4 +1,4 @@
-import logging
+from log.logger_config import logger
 
 from django.conf import settings
 from rest_framework import status
@@ -19,7 +19,6 @@ from commission.utlis import (
 )
 from utils.send_email import send_email
 
-logger = logging.getLogger(__name__)
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 

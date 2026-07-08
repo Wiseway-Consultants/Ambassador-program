@@ -1,12 +1,12 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from logging import getLogger
+from log.logger_config import logger
 
 from utils.MailChimpAPI import mailchimp_api
 
 User = get_user_model()
-logger = getLogger(__name__)
+
 
 
 @receiver(post_save, sender=User)

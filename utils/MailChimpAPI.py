@@ -1,11 +1,10 @@
-from logging import getLogger
+from log.logger_config import logger
 from os import getenv
 import requests
 
 from user.models import User
 
 MAIL_CHIMP_API_KEY = getenv("MAIL_CHIMP_API_KEY")
-logger = getLogger(__name__)
 
 class MailChimpAPI:
     def __init__(self, api_key, dc, audience_id):
