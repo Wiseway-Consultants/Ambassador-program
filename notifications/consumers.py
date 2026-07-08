@@ -1,6 +1,8 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 
+from log.logger_config import logger
+
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
@@ -16,9 +18,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
         if self.user:
             await self.accept()
             await self.channel_layer.group_add(f"user_{self.user.id}", self.channel_name)
-            print(f"✅ Connected: {self.user.email}")
+            logger.success(f"✅ Connected: {self.user.email}")
         else:
-            print("❌ Invalid or expired token")
+            logger.error("❌ Invalid or expired token")
             await self.close()
 
     @database_sync_to_async
@@ -47,4 +49,4 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
             "title": event["title"],
             "notification_type": event["notification_type"],
         })
-        print("Notification sent to websocket")
+        logger.trace("Notification sent to websocket")
