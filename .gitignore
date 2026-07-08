@@ -5,5 +5,5 @@
 /.env
 /staticfiles/admin/
 /staticfiles/rest_framework/
-/logs/
+/log/logs
 /auth/*
