@@ -1,6 +1,7 @@
 import base64
 from log.logger_config import logger
 
+from django.conf import settings
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -14,6 +15,7 @@ from prospect.permissions import IsStaffUser
 from prospect.serializers import ProspectSerializer
 from prospect.utils import get_full_downline
 from utils.ghl_api import GHL_API
+from utils.main_sfo_backend_service import sfo_backend_service
 from utils.prepare_payload import prospect_prepare_payload
 from ambassador_program.views import check_auth_key
 
@@ -21,7 +23,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.exceptions import InvalidSignature
 
-from utils.send_email import send_notification_email
+from utils.send_email import send_notification_email, send_html_email
 from utils.send_telegram_notification import send_telegram_notification
 
 
@@ -59,9 +61,8 @@ class ProspectView(APIView):
 
             # Notification for Relationship Managers if their ambassador invite a prospect
             inviter_user = user.invited_by_user
-            logger.info(inviter_user)
-            if inviter_user and inviter_user.is_staff:
-                logger.info(f"Notify Relationship manager about new Prospect")
+            if inviter_user:
+                logger.info(f"Notify User that their invited ambassador registered a new Prospect")
 
                 send_notification(
                     inviter_user.id,
@@ -74,6 +75,15 @@ class ProspectView(APIView):
                     notification_object=prospect,
                     notification_type="prospect"
                 )
+
+            send_html_email( # Email to admins about new prospect
+                subject="New Prospect registered",
+                recipients=settings.ADMIN_EMAIL_RECIPIENTS,
+                email_body={
+                    "prospect": prospect,
+                },
+                template_name="emails/prospect_registered_notification.html"
+            )
 
             logger.info(f"New Prospect created successfully: {serializer.data}")
             return Response(
@@ -104,13 +114,15 @@ class StaffProspectViewSet(ModelViewSet):
         error_ghl_contacts = []
 
         try:
+            user = request.user
+            assign_to_user = sfo_backend_service.get_user_by_email(user.email)
             for prospect in data["prospects"]:
                 prospect_email = prospect['email']
                 try:
 
                     # 1 Prepare GHL data
                     ghl_location_id = GHL_API.country_to_locationID[prospect["country"]]
-                    contact_payload = prospect_prepare_payload.ghl_contact_create(prospect)
+                    contact_payload = prospect_prepare_payload.ghl_contact_create(prospect, assign_to_user)
 
                     logger.debug(f"Location ID: {ghl_location_id}")
                     logger.debug(f"data for GHL contact{contact_payload}")
@@ -178,6 +190,15 @@ class CompleteDealView(APIView):
                 "Your invited prospect's deal is completed",
                 "info",
                 "Prospect's Deal Completed"
+            )
+            send_html_email(  # Email to ambassador that his prospect deal completed
+                subject="Your Save Fry Oil Prospect's deal is completed",
+                recipients=[prospect.invited_by_user.email],
+                email_body={
+                    "prospect": prospect,
+                    "ambassador": prospect.invited_by_user,
+                },
+                template_name="emails/ambassador_to_claim_a_commission.html"
             )
 
             return Response({"detail": "deal_completed"})
