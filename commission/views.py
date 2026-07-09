@@ -1,6 +1,7 @@
 from log.logger_config import logger
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import status
@@ -11,7 +12,6 @@ from rest_framework.views import APIView
 
 from commission.models import Commission
 from commission.serializers import CommissionListSerializer
-from commission.utlis import create_stripe_recipient
 from notifications.utils import send_notification_to_multiple_users, send_notification
 from prospect.models import Prospect
 from prospect.permissions import IsSuperUser
@@ -57,7 +57,7 @@ class CommissionClaimView(APIView):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            currency = get_currency_by_country_code(prospect.country)
+            currency = request_user.currency
             users_invitation_chain = get_invitation_user_chain_from_prospect(prospect)
             commission_level = 0
             for user in users_invitation_chain:
@@ -69,7 +69,7 @@ class CommissionClaimView(APIView):
                         pool_percentage = PERCENTAGE_COMMISSION_LEVELS[commission_level] / 100
                         money_amount = (TOTAL_TEAM_REWARD_AMOUNT * pool_percentage) * number_of_frylows
                     logger.info(f"Commission amount for user's id {user.id}: {currency} {money_amount}")
-                    Commission.objects.create(
+                    commission = Commission.objects.create(
                         prospect=prospect,
                         number_of_frylows=number_of_frylows,
                         user=user,
@@ -80,15 +80,37 @@ class CommissionClaimView(APIView):
                     commission_level += 1
                     prospect.claimed = True
                     prospect.save()
+                    send_html_email(
+                        subject="SFO Ambassador: Your commission is pending approval",
+                        recipients=[user.email],
+                        email_body={
+                            "user": user,
+                            "prospect": prospect,
+                            "commission": commission,
+                        },
+                        template_name="emails/commission_pending_email.html"
+                    )
 
                 logger.info(f"Successfully claimed prospect for commission: {prospect}")
 
             admin_users = get_user_model().objects.filter(is_superuser=True)
             send_notification_to_multiple_users(
                 admin_users,
-                f"Prospect has been submitted, please review the commission and approve it.",
+                f"Prospect has been submitted, please review the commissions and approve them.",
                 "info",
                 "Prospect claimed"
+            )
+            send_html_email(
+                subject="Ambassador claimed a prospect. Review and approve the commissions",
+                recipients=settings.ADMIN_EMAIL_RECIPIENTS,
+                email_body={
+                    "claiming_ambassador": request_user,
+                    "prospect": prospect,
+                    "number_of_frylows": number_of_frylows,
+                    "claimed_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+                    "commissions": Commission.objects.filter(prospect=prospect),
+                },
+                template_name="emails/commission_approval_email.html"
             )
             return Response({"detail": "success"}, status=status.HTTP_201_CREATED)
 
@@ -131,15 +153,11 @@ class StripeRecipientView(APIView):
             commission_recipient = commission.user
             stripe_recipient_id = commission_recipient.stripe_account_id
 
+            if not stripe_recipient_id:
+                logger.info("Stripe recipient id not found")
+                return Response({"error": "Stripe recipient account is missing"}, status=status.HTTP_400_BAD_REQUEST)
+
             with transaction.atomic():
-                if not stripe_recipient_id:
-
-                    logger.info("Stripe recipient id not found, creating")
-                    stripe_recipient_id = create_stripe_recipient(commission_recipient)
-                    commission_recipient.stripe_account_id = stripe_recipient_id
-                    commission_recipient.save()
-                    logger.info(f"Stripe recipient account added to User: {commission_recipient.id}")
-
                 commission.admin_approve = True
                 commission.approved_by_user = request.user
                 commission.save()
@@ -149,6 +167,17 @@ class StripeRecipientView(APIView):
                     "Commission approved, please visit ambassador dashboard to receive money",
                     "info",
                     "Your commission has been approved"
+                )
+                send_html_email(
+                    subject="Your Save Fry Oil commission has been approved. Receive your money now",
+                    recipients=[commission_recipient.email],
+                    email_body={
+                        "user": commission_recipient,
+                        "prospect": commission.prospect,
+                        "approved_at": datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
+                        "commission": commission,
+                    },
+                    template_name="emails/commission_been_approved.html"
                 )
                 return Response(
                     {"detail": "Success"}, status=status.HTTP_200_OK
