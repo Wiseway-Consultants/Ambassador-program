@@ -17,7 +17,7 @@ from commission.utlis import (
     create_stripe_transfer_from_commission,
     create_stripe_recipient, create_bank_account_update_link
 )
-from utils.send_email import send_email
+from utils.send_email import send_email, send_html_email
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -40,7 +40,8 @@ class StripeProfileView(APIView):
                 )
             account = retrieve_recipient_stripe(user)
             payment_capability_status = account["configuration"]["recipient"]["capabilities"]["bank_accounts"]["local"]["status"]
-            if user.stripe_onboard_status is False and payment_capability_status == "active":
+            default_bank_information = account["configuration"]["recipient"]["default_outbound_destination"]
+            if user.stripe_onboard_status is False and payment_capability_status == "active" and default_bank_information:
                 user.stripe_onboard_status = True
                 user.save()
                 logger.info(f"Stripe account {user_stripe_acc_id} is onboard")
@@ -120,7 +121,6 @@ class StripeAccountUpdateEmailView(APIView):
 
 
 class StripePayoutsView(APIView):
-
     permission_classes = (IsAuthenticated, )
 
     def post(self, request):
@@ -129,7 +129,12 @@ class StripePayoutsView(APIView):
         request_user = request.user
         serializer = CommissionStripePayoutSerializer(data=data)
         if not serializer.is_valid():
-            return Response({"error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            errors = " ".join(
+                str(e)
+                for errs in serializer.errors.values()
+                for e in errs
+            )
+            return Response({"error": errors}, status=status.HTTP_400_BAD_REQUEST)
         commission_id = serializer.validated_data["id"]
 
         try:
@@ -137,11 +142,20 @@ class StripePayoutsView(APIView):
             commission_user = commission.user
             if commission_user != request_user:
                 raise PermissionDenied("You can't submit payouts for this commission")
-
             transfer = create_stripe_transfer_from_commission(commission_user, commission)
+            if "error" in transfer:
+                return Response({"error": transfer["error"].get("message")}, status=status.HTTP_400_BAD_REQUEST)
             commission.stripe_transfer_id = transfer["id"]
             commission.paid = True
             commission.save()
+            send_html_email(
+                subject="Your Save Fry Oil commission has been paid",
+                recipients=[commission_user.email],
+                email_body={
+                    "commission": commission
+                },
+                template_name="emails/commission_paid.html"
+            )
             return Response({"transfer": transfer}, status=status.HTTP_201_CREATED)
         except Exception as e:
             logger.error(f"Error creating stripe payout: {e}")
