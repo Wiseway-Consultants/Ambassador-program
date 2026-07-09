@@ -3,8 +3,8 @@
 class ProspectPreparePayload:
 
     @staticmethod
-    def ghl_contact_create(data):
-        return {
+    def ghl_contact_create(data, assign_to_user=None):
+        payload = {
             "firstName": data.get("first_name", ""),
             "lastName": data.get("last_name", ""),
             "email": data.get("email", ""),
@@ -13,14 +13,9 @@ class ProspectPreparePayload:
             "country": data.get("country", ""),
             "tags": ["ambassador prospect"]
         }
-
-    @staticmethod
-    def ghl_opportunity_create(data, contact_id):
-        return {
-            "name": f"{data.get('email')} {data.get('restaurant_organisation_name')}",
-            "status": "open",
-            "contactId": contact_id
-        }
+        if assign_to_user:
+            payload["assignedTo"] = assign_to_user.get("ghl_user_id")
+        return payload
 
 
 prospect_prepare_payload = ProspectPreparePayload()
