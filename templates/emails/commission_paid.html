@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Save Fry Oil Commission Has Been Paid</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #2e7d32 0%, #1565c0 100%); padding: 30px 40px; text-align: center;">
+                            <p style="margin: 0 0 10px; color: rgba(255,255,255,0.85); font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Payment Sent</p>
+                            <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: bold;">Your SFO Commission Has Been Paid 💸</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 25px; color: #333333; font-size: 16px; line-height: 1.6;">
+                                Hi <strong>{{ commission.user.first_name }}</strong>,<br><br>
+                                Good news — your commission for referring <strong>{{ commission.prospect.first_name }} {{ commission.prospect.last_name }}</strong> has been paid out. The funds are on their way to you.
+                            </p>
+
+                            <!-- Referral Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 0 0 25px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; color: #2e7d32; font-size: 18px; border-bottom: 2px solid #2e7d32; padding-bottom: 10px;">Referral Details</h2>
+                                        <table width="100%" cellpadding="8" cellspacing="0">
+                                            <tr>
+                                                <td style="color: #666666; font-size: 14px; font-weight: bold;">Restaurant / Organisation:</td>
+                                                <td style="color: #333333; font-size: 14px;"><strong style="color: #2e7d32;">{{ commission.prospect.restaurant_organisation_name }}</strong></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Payment Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 6px; margin: 0 0 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; color: #2e7d32; font-size: 18px; border-bottom: 2px solid #2e7d32; padding-bottom: 10px;">Payment Details</h2>
+
+                                        <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse: collapse;">
+                                            <tr style="background-color: #2e7d32;">
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px;">Type</td>
+                                                <td style="color: #ffffff; font-size: 13px; font-weight: bold; padding: 10px 8px; border-radius: 0 4px 0 0; text-align: right;">Amount</td>
+                                            </tr>
+                                            <tr style="background-color: #ffffff; border-bottom: 1px solid #e9ecef;">
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px;">
+                                                    {% if commission.commission_tree_level == 0 %}
+                                                    <span style="display: inline-block; background-color: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: bold;">Direct Sale</span>
+                                                    {% else %}
+                                                    <span style="display: inline-block; background-color: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 20px; font-size: 12px; font-weight: bold;">Team Reward</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td style="color: #333333; font-size: 14px; padding: 10px 8px; text-align: right;"><strong>{{ commission.currency }} {{ commission.money_amount }}</strong></td>
+                                            </tr>
+                                        </table>
+
+                                        <table width="100%" cellpadding="8" cellspacing="0" style="margin-top: 10px;">
+                                            <tr>
+                                                <td style="color: #666666; font-size: 13px; width: 45%;">Payment Reference:</td>
+                                                <td style="color: #333333; font-size: 13px; font-family: monospace;">{{ commission.stripe_transfer_id }}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 10px 0 30px;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="https://savefryoil.com/ambassador-referrals/claimed-commissions/" style="display: inline-block; background: linear-gradient(135deg, #2e7d32 0%, #1565c0 100%); color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(46, 125, 50, 0.3);">
+                                            View Your Commissions →
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                                Depending on your bank, it may take a few business days for the funds to appear in your account.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8f9fa; padding: 20px 40px; text-align: center; border-top: 1px solid #e9ecef;">
+                            <p style="margin: 0; color: #999999; font-size: 12px; line-height: 1.6;">
+                                This is an automated notification from your Ambassador Management System.<br>
+                                © 2026 Save Fry Oil. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
