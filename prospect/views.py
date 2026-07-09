@@ -102,7 +102,6 @@ class StaffProspectViewSet(ModelViewSet):
 
         ghl_contacts_id = []
         error_ghl_contacts = []
-        ghl_opportunities_id = []
 
         try:
             for prospect in data["prospects"]:
@@ -128,22 +127,11 @@ class StaffProspectViewSet(ModelViewSet):
 
                     ghl_contacts_id.append(contact_id)
 
-                    # 3 Create opportunity
-                    opportunity_payload = prospect_prepare_payload.ghl_opportunity_create(prospect, contact_id)
-
-                    logger.debug(f"Opportunity payload: {opportunity_payload}")
-                    opportunity = GHL_API.create_opportunity(opportunity_payload, location_id=ghl_location_id)
-                    logger.debug(f"Opportunity response: {opportunity}")
-                    opportunity_id = opportunity.get("opportunity", {}).get("id")
-
-                    ghl_opportunities_id.append(opportunity_id)
-
                     # 4 Update Prospect
                     db_prospect = Prospect.objects.get(id=prospect["id"])
                     db_prospect.ghl_contact_id = contact_id
-                    db_prospect.ghl_opportunity_id = opportunity_id
                     db_prospect.ghl_location_id = ghl_location_id
-                    db_prospect.save(update_fields=["ghl_contact_id", "ghl_opportunity_id", "ghl_location_id"])
+                    db_prospect.save(update_fields=["ghl_contact_id", "ghl_location_id"])
                     logger.info(f"Prospect {prospect_email} created successfully")
 
                 except Exception as e:
@@ -152,8 +140,7 @@ class StaffProspectViewSet(ModelViewSet):
 
             response = {
                     "contacts_id": ghl_contacts_id,
-                    "error_contacts": error_ghl_contacts,
-                    "opportunities_id": ghl_opportunities_id,
+                    "error_contacts": error_ghl_contacts
                 }
             logger.info(f"Successfully submit all prospects to GHL: {response}")
             return Response(
@@ -164,7 +151,6 @@ class StaffProspectViewSet(ModelViewSet):
             error_response = {
                 "error": str(e),
                 "successful_contacts": ghl_contacts_id,
-                "successful_opportunities": ghl_opportunities_id,
             }
             logger.error(f"Error submitting prospects: {error_response}")
             return Response(error_response, status=status.HTTP_400_BAD_REQUEST)
@@ -177,11 +163,13 @@ class CompleteDealView(APIView):
         try:
             check_auth_key(headers)
             data = request.data
-            logger.info(f"Deal Completed in GHL: {data}")
-            contact_id = data.get("contact_id")
-            opportunity_id = data.get("id")
+            logger.info(f"Deal Completed WON in Priority Dashboard: {data}")
+            contact_id = data.get("ghl_contact_id")
+            location_id = data.get("ghl_location_id")
 
-            prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_opportunity_id=opportunity_id)
+            prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_location_id=location_id)
+            if not prospect:
+                return Response({"error": "Prospect not found"}, status=404)
             prospect.deal_completed = True
             prospect.save(update_fields=["deal_completed"])
 
@@ -267,9 +255,8 @@ class GhlWebhookView(APIView):
             # e.g. mark contact as deleted in your DB
             prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_location_id=location_id)
             prospect.ghl_contact_id = None
-            prospect.ghl_opportunity_id = None
             prospect.ghl_location_id = None
-            prospect.save(update_fields=["ghl_contact_id", "ghl_opportunity_id", "ghl_location_id"])
+            prospect.save(update_fields=["ghl_contact_id", "ghl_location_id"])
             logger.info(f"Delete prospect's: {prospect.email} GHL opportunity and contact id")
 
         # 7️⃣ Always return 200 quickly so GHL doesn’t retry
