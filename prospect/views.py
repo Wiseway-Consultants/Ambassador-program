@@ -179,8 +179,9 @@ class CompleteDealView(APIView):
             contact_id = data.get("ghl_contact_id")
             location_id = data.get("ghl_location_id")
 
-            prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_location_id=location_id)
-            if not prospect:
+            try:
+                prospect = Prospect.objects.get(ghl_contact_id=contact_id, ghl_location_id=location_id)
+            except Prospect.DoesNotExist:
                 return Response({"error": "Prospect not found"}, status=404)
             prospect.deal_completed = True
             prospect.save(update_fields=["deal_completed"])
